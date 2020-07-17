@@ -97,3 +97,4 @@ data_bestandteile_oem1 <- bind_rows(new_data_bestandteile_oem1_typ11,
 data_fahrzeug_OEM1 <- bind_rows(new_data_fahrzeug_OEM1_Typ11,
                                 new_data_fahrzeug_OEM1_Typ12)
 ```
+
