@@ -1,0 +1,90 @@
+---
+title: "Case_Study_Group_50"
+author: "Long Hong, Vanessa Schwarz, Jonas Rieger, Andre Düding, Brian Eiffert"
+date: "16 7 2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+
+# Packages
+Install required packages
+
+```{r}
+if(!require("install.load")){
+  install.packages("install.load")
+}
+library(install.load)
+
+install_load("readr", "tidyverse", "stringr", "readxl","ggplot2", "plotly","lubridate")
+```
+
+## Import Data
+Fist the necessary documents have to be imported in the R Markdown file.
+```{r}
+#Hier ist ID_Motor und ID_Fahrzeug interessant
+# Rohdaten werden importiert
+data_bestandteile_oem1_typ11 <- read_csv2("./Data/Fahrzeug/Bestandteile_Fahrzeuge_OEM1_Typ11.csv", col_types = c(X1=col_integer(),ID_Karosserie=col_character(),ID_Schaltung=col_character(),ID_Sitze=col_character(),ID_Motor=col_character(),ID_Fahrzeug=col_character()))
+data_bestandteile_oem1_typ11$X1<- NULL
+
+data_bestandteile_oem1_typ12 <- read_csv2("./Data/Fahrzeug/Bestandteile_Fahrzeuge_OEM1_Typ12.csv", col_types = c(X1=col_integer(),ID_Karosserie=col_character(),ID_Schaltung=col_character(),ID_Sitze=col_character(),ID_Motor=col_character(),ID_Fahrzeug=col_character()))
+data_bestandteile_oem1_typ12$X1<- NULL
+
+#Fehlerhafte Fahrzeuge bestimmen 
+data_fahrzeug_OEM1_Typ11 <- read_csv("./Data/Fahrzeug/Fahrzeuge_OEM1_Typ11.csv", col_types = c(X1= col_integer(),ID_Fahrzeug=col_character(),Produktionsdatum= col_character(),Herstellnumer= col_integer(), Fehlerhaft=col_skip(), Fehlerhaft_Datum=col_character(), Fehlerhaft_Fahrleistung=col_integer()))
+data_fahrzeug_OEM1_Typ11$X1   <- NULL
+data_fahrzeug_OEM1_Typ11$X1_1 <- NULL
+data_fahrzeug_OEM1_Typ11$Produktionsdatum <- as.Date(data_fahrzeug_OEM1_Typ11$Produktionsdatum,
+                                                     format = "%Y-%m-%d")
+data_fahrzeug_OEM1_Typ11$Fehlerhaft_Datum <- as.Date(data_fahrzeug_OEM1_Typ11$Fehlerhaft_Datum,
+                                                     format = "%Y-%m-%d")
+
+
+
+data_fahrzeug_OEM1_Typ12 <- read_csv("./Data/Fahrzeug/Fahrzeuge_OEM1_Typ11.csv",col_types = c(X1= col_integer(),ID_Fahrzeug=col_character(),Produktionsdatum= col_character(),Herstellnumer= col_integer(), Fehlerhaft=col_skip(), Fehlerhaft_Datum=col_character(), Fehlerhaft_Fahrleistung=col_integer()))
+data_fahrzeug_OEM1_Typ12$X1   <- NULL
+data_fahrzeug_OEM1_Typ12$X1_1 <- NULL
+data_fahrzeug_OEM1_Typ12$Produktionsdatum <- as.Date(data_fahrzeug_OEM1_Typ12$Produktionsdatum,
+                                                     format = "%Y-%m-%d")
+data_fahrzeug_OEM1_Typ12$Fehlerhaft_Datum <- as.Date(data_fahrzeug_OEM1_Typ12$Fehlerhaft_Datum,
+                                                     format = "%Y-%m-%d")
+
+data_bestandteile_Komponente_K1DI1 <- read_csv2("./Data/Komponente/Bestandteile_Komponente_K1DI1.csv")
+data_bestandteile_Komponente_K1DI1$X1 <- NULL
+
+data_Komponente_K1DI1 <- read_csv("./Data/Komponente/Komponente_K1DI1.csv")
+data_Komponente_K1DI1$X1 <- NULL
+data_Komponente_K1DI1$X1_1 <- NULL
+```
+Now the data have to be tidy up
+```{r}
+#Fehlerhafte Daten in sich ???????
+new_data_bestandteile_oem1_typ11 <- data_bestandteile_oem1_typ11 %>%
+  filter(grepl("K1DI1",ID_Motor,fixed=TRUE))%>%#https://www.rdocumentation.org/packages/dplyr/versions/0.7.8/topics/filter
+  select(ID_Motor,ID_Fahrzeug)
+  
+
+new_data_bestandteile_oem1_typ12 <- new_data_bestandteile_oem1_typ11 %>%
+  filter(grepl("K1DI1",ID_Motor,fixed=TRUE))%>%
+  select(ID_Motor,ID_Fahrzeug)
+
+new_data_fahrzeug_OEM1_Typ11 <- data_fahrzeug_OEM1_Typ11 %>%
+  filter(Fehlerhaft== 1 & between(Produktionsdatum, as.Date("2008-03-01"),
+                                  as.Date("2012-05-11")))
+#https://stackoverflow.com/questions/28335715/r-how-to-filter-subset-a-sequence-of-dates
+  
+
+new_data_fahrzeug_OEM1_Typ12 <- data_fahrzeug_OEM1_Typ12 %>%
+  filter(Fehlerhaft== 1)
+
+```
+
