@@ -25,7 +25,7 @@ if(!require("install.load")){
 }
 library(install.load)
 
-install_load("readr", "tidyverse", "stringr", "readxl","ggplot2", "plotly","lubridate")
+install_load("readr", "tidyverse", "stringr", "readxl","ggplot2", "plotly","lubridate", "data.table")
 ```
 
 # Import Data
@@ -33,14 +33,14 @@ Fist the necessary documents have to be imported in the R Markdown file.
 ```{r}
 #Hier ist ID_Motor und ID_Fahrzeug interessant
 # Rohdaten werden importiert
-data_bestandteile_oem1_typ11 <- read_csv2("./Data/Fahrzeug/Bestandteile_Fahrzeuge_OEM1_Typ11.csv", col_types = c(X1=col_integer(),ID_Karosserie=col_character(),ID_Schaltung=col_character(),ID_Sitze=col_character(),ID_Motor=col_character(),ID_Fahrzeug=col_character()))
+data_bestandteile_oem1_typ11 <- read_csv2("./Data/Fahrzeug/Bestandteile_Fahrzeuge_OEM1_Typ11.csv", col_types = cols(X1=col_integer(),ID_Karosserie=col_character(),ID_Schaltung=col_character(),ID_Sitze=col_character(),ID_Motor=col_character(),ID_Fahrzeug=col_character()))
 data_bestandteile_oem1_typ11$X1<- NULL
 
-data_bestandteile_oem1_typ12 <- read_csv2("./Data/Fahrzeug/Bestandteile_Fahrzeuge_OEM1_Typ12.csv", col_types = c(X1=col_integer(),ID_Karosserie=col_character(),ID_Schaltung=col_character(),ID_Sitze=col_character(),ID_Motor=col_character(),ID_Fahrzeug=col_character()))
+data_bestandteile_oem1_typ12 <- read_csv2("./Data/Fahrzeug/Bestandteile_Fahrzeuge_OEM1_Typ12.csv", col_types = cols(X1=col_integer(),ID_Karosserie=col_character(),ID_Schaltung=col_character(),ID_Sitze=col_character(),ID_Motor=col_character(),ID_Fahrzeug=col_character()))
 data_bestandteile_oem1_typ12$X1<- NULL
 
 # Fehlerhafte Fahrzeuge bestimmen 
-data_fahrzeug_OEM1_Typ11 <- read_csv("./Data/Fahrzeug/Fahrzeuge_OEM1_Typ11.csv", col_types = c(X1= col_integer(),ID_Fahrzeug=col_character(),Produktionsdatum= col_character(),Herstellnumer= col_integer(), Fehlerhaft=col_skip(), Fehlerhaft_Datum=col_character(), Fehlerhaft_Fahrleistung=col_integer()))
+data_fahrzeug_OEM1_Typ11 <- read_csv("./Data/Fahrzeug/Fahrzeuge_OEM1_Typ11.csv", col_types = cols(X1= col_integer(),ID_Fahrzeug=col_character(),Produktionsdatum= col_character(),Herstellnumer= col_integer(), Fehlerhaft=col_skip(), Fehlerhaft_Datum=col_character(), Fehlerhaft_Fahrleistung=col_integer()))
 data_fahrzeug_OEM1_Typ11$X1   <- NULL
 data_fahrzeug_OEM1_Typ11$X1_1 <- NULL
 data_fahrzeug_OEM1_Typ11$Produktionsdatum <- as.Date(data_fahrzeug_OEM1_Typ11$Produktionsdatum,
@@ -49,7 +49,7 @@ data_fahrzeug_OEM1_Typ11$Fehlerhaft_Datum <- as.Date(data_fahrzeug_OEM1_Typ11$Fe
                                                      format = "%Y-%m-%d")
 
 
-data_fahrzeug_OEM1_Typ12 <- read_csv("./Data/Fahrzeug/Fahrzeuge_OEM1_Typ11.csv",col_types = c(X1= col_integer(),ID_Fahrzeug=col_character(),Produktionsdatum= col_character(),Herstellnumer= col_integer(), Fehlerhaft=col_skip(), Fehlerhaft_Datum=col_character(), Fehlerhaft_Fahrleistung=col_integer()))
+data_fahrzeug_OEM1_Typ12 <- read_csv("./Data/Fahrzeug/Fahrzeuge_OEM1_Typ11.csv",col_types = cols(X1= col_integer(),ID_Fahrzeug=col_character(),Produktionsdatum= col_character(),Herstellnumer= col_integer(), Fehlerhaft=col_skip(), Fehlerhaft_Datum=col_character(), Fehlerhaft_Fahrleistung=col_integer()))
 data_fahrzeug_OEM1_Typ12$X1   <- NULL
 data_fahrzeug_OEM1_Typ12$X1_1 <- NULL
 data_fahrzeug_OEM1_Typ12$Produktionsdatum <- as.Date(data_fahrzeug_OEM1_Typ12$Produktionsdatum,
@@ -63,6 +63,27 @@ data_bestandteile_Komponente_K1DI1$X1 <- NULL
 data_Komponente_K1DI1 <- read_csv("./Data/Komponente/Komponente_K1DI1.csv")
 data_Komponente_K1DI1$X1 <- NULL
 data_Komponente_K1DI1$X1_1 <- NULL
+
+#Einzelteile (1,2,5,6) werden Importiert (für K1DI1); Siehe Case Study Vorbereitung 
+data_einzelteil_t1 <- read_file("./Data/Einzelteil/Einzelteil_T01.txt")%>%
+  str_replace_all("[[|]]"," ")%>% #replace all seperators with simicolon 
+  str_replace_all("     ", ";")%>%
+  str_replace_all(" ","\n")%>%#replace all withespaces with newlines
+  fread()
+data_einzelteil_t1 <- data_einzelteil_t1[,c(-1,-2)]
+
+data_einzelteil_t2 <- read_file("./Data/Einzelteil/Einzelteil_T02.txt")%>%
+  str_replace_all("  ",";")%>%
+  str_replace_all("\t","\n")%>%
+  fread()
+data_einzelteil_t2 <- data_einzelteil_t2[,c(-1,-2)]
+
+data_einzelteil_t5 <- read_csv("./Data/Einzelteil/Einzelteil_T05.csv", col_type=cols(ID_T05.y=col_character(),Produktionsdatum.y=col_date(format=""),Herstellernummer.y=col_character(),Werksnummer.y=col_character(),  Fehlerhaft.y = col_logical(), Fehlerhaft_Datum.y = col_date(format=""), Fehlerhaft_Fahrleistung.y = col_character()))
+class(data_einzelteil_t5$ID_T05.y)
+data_einzelteil_t5 <- data_einzelteil_t5[,c(-1,-2)]
+
+data_einzelteil_t6 <- read_csv("./Data/Einzelteil/Einzelteil_T05.csv",col_type=cols(ID_T05.y=col_character(),Produktionsdatum.y=col_date(format=""),Herstellernummer.y=col_character(),Werksnummer.y=col_character(),  Fehlerhaft.y = col_logical(), Fehlerhaft_Datum.y = col_date(format=""), Fehlerhaft_Fahrleistung.y = col_character()))
+data_einzelteil_t6 <- data_einzelteil_t6[,c(-1,-2)]
 
 # Ort und Zulassung
 data_bundesland_plz_ort <- read_excel("./Data/Zulassungen/OpenGeoDB_bundesland_plz_ort_de (1).xls", col_names = c("Bundesland","PLZ","Ort"))
