@@ -27,6 +27,19 @@ library(install.load)
 
 install_load("readr", "tidyverse", "stringr", "readxl","ggplot2", "plotly","lubridate", "data.table")
 ```
+#Functions
+```{r}
+ID_to_number <- function(data,ID){
+  F1 <-  separate(data,ID,sep = "-", into = c("v1","v2","v3","v4"))
+  a= toString(ID)+"_Number"
+  F2 <-  unite(F1, v1,v2,v3,v4,col= a,sep="")
+
+  data_bestandteile_OEM1 <- add_column(data_bestandteile_OEM1,F2$ID_Fahrzeug_Nummer)%>%
+    rename(ID_Fahrzeug_Nummer=F2$ID_Fahrzeug_Nummer)
+}
+
+
+```
 
 # Import Data
 Fist the necessary documents have to be imported in the R Markdown file.
@@ -66,7 +79,7 @@ data_Komponente_K1DI1 <- data_Komponente_K1DI1[,c(-1,-2)] # Delete unecessary co
 data_bundesland_plz_ort <- read_excel("./Data/Zulassungen/OpenGeoDB_bundesland_plz_ort_de (1).xls", col_names = c("Bundesland","PLZ","Ort"))
 
 data_Zulassung <- read_csv2("./Data/Zulassungen/Zulassungen_alle_Fahrzeuge.csv")
-data_Zulassung$X1 <- NULL
+
 ```
 
 ```{r}
@@ -105,7 +118,7 @@ Now the data have to be tidy up
 #Fehlerhafte Daten in sich ???????
 new_data_bestandteile_oem1_typ11 <- data_bestandteile_oem1_typ11 %>%
   filter(grepl("K1DI1",ID_Motor,fixed=TRUE))%>% # Filter after the relevant motor for more information : https://www.rdocumentation.org/packages/dplyr/versions/0.7.8/topics/filter
-  select(ID_Motor,ID_Fahrzeug)
+  select(ID_Motor,ID_Fahrzeug) #Select relevant coulums
   
 
 new_data_bestandteile_oem1_typ12 <- new_data_bestandteile_oem1_typ11 %>%
@@ -113,30 +126,62 @@ new_data_bestandteile_oem1_typ12 <- new_data_bestandteile_oem1_typ11 %>%
   select(ID_Motor,ID_Fahrzeug)
 
 new_data_fahrzeug_OEM1_Typ11 <- data_fahrzeug_OEM1_Typ11 %>%
+  select(ID_Fahrzeug,Produktionsdatum,Herstellernummer,Werksnummer)%>%
   filter(between(Produktionsdatum, as.Date("2008-03-01"),
                                   as.Date("2012-05-11")))# Filter after the relevant time period for more information: https://stackoverflow.com/questions/28335715/r-how-to-filter-subset-a-sequence-of-dates
   
 
 new_data_fahrzeug_OEM1_Typ12 <- data_fahrzeug_OEM1_Typ12 %>%
+  select(ID_Fahrzeug,Produktionsdatum,Herstellernummer,Werksnummer)%>%
   filter(between(Produktionsdatum, as.Date("2008-03-01"),
                                   as.Date("2012-05-11")))
 
-new_zulassung <- data_Zulassung %>%
-  rename(KeineAhnung = X1)
+# Hier gehts morgen weiter
+x_data_Komponente_K1DI1 <- data_Komponente_K1DI1%>%
+  select(ID_Motor.x,Produktionsdatum.x,Herstellernummer.x,Werksnummer.x)%>%
+  filter(between(Produktionsdatum.x, as.Date("2008-03-01"), as.Date("2012-05-11")))%>%
+  rename(ID_Motor=ID_Motor.x,Produktionsdatum=Produktionsdatum.x,Herstellernummer=Herstellernummer.x,
+         Werksnummer=Werksnummer.x)
+
+
+y_data_Komponente_K1DI1 <- data_Komponente_K1DI1%>%
+  select(ID_Motor.y,Produktionsdatum.y,Herstellernummer.y,Werksnummer.y)%>%
+  filter(between(Produktionsdatum.y, as.Date("2008-03-01"), as.Date("2012-05-11")))%>%
+  rename(ID_Motor=ID_Motor.y,Produktionsdatum=Produktionsdatum.y,Herstellernummer=Herstellernummer.y,
+         Werksnummer=Werksnummer.y)
+
+z_data_Komponente_K1DI1 <- data_Komponente_K1DI1%>%
+  select(ID_Motor,Produktionsdatum,Herstellernummer,Werksnummer)%>%
+  filter(between(Produktionsdatum, as.Date("2008-03-01"), as.Date("2012-05-11")))
+
+xy_data_Komponente_K1DI1<- bind_rows(x_data_Komponente_K1DI1,y_data_Komponente_K1DI1)
+new_data_Komponente_K1DI1<- bind_rows(xy_data_Komponente_K1DI1,z_data_Komponente_K1DI1)
+  
+  
+new_data_Komponente_K1DI1 <- data_Komponente_K1DI1%>%
+  select(ID_Motor.x,Produktionsdatum.x,Herstellernummer.x,Werksnummer.x,ID_Motor.y,Produktionsdatum.y,
+         Herstellernummer.y,Werksnummer.y,ID_Motor,Produktionsdatum,Herstellernummer,Werksnummer)%>%
+  filter(between(Produktionsdatum, as.Date("2008-03-01"), as.Date("2012-05-11")) | between(Produktionsdatum.x,
+        as.Date("2008-03-01"), as.Date("2012-05-11")) | between(Produktionsdatum, as.Date("2008-03-01"),  as.Date("2012-05-11")))
+
 
 ```
-
+## Creaing one Data set
 ```{r}
 data_bestandteile_OEM1 <- bind_rows(new_data_bestandteile_oem1_typ11, 
-                                    new_data_bestandteile_oem1_typ12)
+                                    new_data_bestandteile_oem1_typ12)%>% # Get one date set from Type 11 and type 12
+  mutate(ID_Fahrzeug_Nummer= as.integer(str_replace_all(ID_Fahrzeug,"-","")))# Get integer value for later join
 
-F1 <-  separate(data_bestandteile_OEM1,ID_Fahrzeug,sep = "-", into = c("v1","v2","v3"))
-F2 <-  unite(F1, v1,v2,v3,col="ID_Fahrzeug",sep="")
+  
 
 data_fahrzeug_OEM1 <- bind_rows(new_data_fahrzeug_OEM1_Typ11,
-                                new_data_fahrzeug_OEM1_Typ12)
+                                new_data_fahrzeug_OEM1_Typ12)%>% # Get one date set from Type 11 and type 12
+  mutate(ID_Fahrzeug_Nummer= as.integer(str_replace_all(ID_Fahrzeug,"-","")))# Get integer value for later join    
 
+# Left_join die richtige Wahl oder Right join
+data_OEM <- left_join(data_bestandteile_OEM1,data_fahrzeug_OEM1,
+                       by="ID_Fahrzeug_Nummer",na_matches="never") # Get Dataset to get engine and production date. Dealing with NA see: https://stackoverflow.com/questions/58454706/how-do-i-fix-error-stdbad-alloc-message-when-using-dplyr-full-join-to-join-3
 
-data_OEM <- inner_join(data_bestandteile_OEM1$ID_Fahrzeug,data_fahrzeug_OEM1$ID_Fahrzeug)
+data_OEM$ID_Fahrzeug.y <- NULL
 ```
 
