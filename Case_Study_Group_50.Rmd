@@ -25,7 +25,7 @@ if(!require("install.load")){
 }
 library(install.load)
 
-install_load("readr", "tidyverse", "stringr", "readxl","ggplot2", "plotly","lubridate", "data.table")
+install_load("readr", "tidyverse", "stringr", "readxl","ggplot2", "plotly","lubridate", "data.table","bit64")
 ```
 #Functions
 ```{r}
@@ -71,9 +71,7 @@ data_fahrzeug_OEM1_Typ12$Produktionsdatum <- as.Date(data_fahrzeug_OEM1_Typ12$Pr
 data_fahrzeug_OEM1_Typ12$Fehlerhaft_Datum <- as.Date(data_fahrzeug_OEM1_Typ12$Fehlerhaft_Datum,
                                                      format = "%Y-%m-%d") # Transform col as date
 
-#Komponente K1DI1
-data_Komponente_K1DI1 <- read_csv("./Data/Komponente/Komponente_K1DI1.csv", col_type=cols(ID_Motor.y=col_character(), Produktionsdatum.y=col_date(format=""), Herstellernummer.y=col_character(),Werksnummer.y=col_character(), Fehlerhaft.y = col_logical(), Fehlerhaft_Datum.y = col_date(format=""), Fehlerhaft_Fahrleistung.y = col_character(),ID_Motor= col_character(),Produktionsdatum=col_date(format=""),Herstellernummer=col_integer(),Werksnummer=col_integer()))# Import data
-data_Komponente_K1DI1 <- data_Komponente_K1DI1[,c(-1,-2)] # Delete unecessary column
+
 
 # Ort und Zulassung
 data_bundesland_plz_ort <- read_excel("./Data/Zulassungen/OpenGeoDB_bundesland_plz_ort_de (1).xls", col_names = c("Bundesland","PLZ","Ort"))
@@ -110,33 +108,13 @@ data_einzelteil_t5 <- data_einzelteil_t5[,c(-1,-2)]
 data_einzelteil_t6 <- read_csv("./Data/Einzelteil/Einzelteil_T05.csv",col_type=cols(ID_T05.y=col_character(),Produktionsdatum.y=col_date(format=""),Herstellernummer.y=col_character(),Werksnummer.y=col_character(),  Fehlerhaft.y = col_logical(), Fehlerhaft_Datum.y = col_date(format=""), Fehlerhaft_Fahrleistung.y = col_character()))
 data_einzelteil_t6 <- data_einzelteil_t6[,c(-1,-2)]
 
-```
+#Komonenete K1DI1 wahrscheinlich unwichtig
 
-## Tidy Data
-Now the data have to be tidy up
-```{r}
-#Fehlerhafte Daten in sich ???????
-new_data_bestandteile_oem1_typ11 <- data_bestandteile_oem1_typ11 %>%
-  filter(grepl("K1DI1",ID_Motor,fixed=TRUE))%>% # Filter after the relevant motor for more information : https://www.rdocumentation.org/packages/dplyr/versions/0.7.8/topics/filter
-  select(ID_Motor,ID_Fahrzeug) #Select relevant coulums
-  
+#Komponente K1DI1
+data_Komponente_K1DI1 <- read_csv("./Data/Komponente/Komponente_K1DI1.csv", col_type=cols(ID_Motor.y=col_character(), Produktionsdatum.y=col_date(format=""), Herstellernummer.y=col_integer(),Werksnummer.y=col_integer(), Fehlerhaft.y = col_logical(), Fehlerhaft_Datum.y = col_date(format=""), Fehlerhaft_Fahrleistung.y = col_character(),ID_Motor= col_character(),Produktionsdatum=col_date(format=""),Herstellernummer=col_integer(),Werksnummer=col_integer()))# Import data
+data_Komponente_K1DI1 <- data_Komponente_K1DI1[,c(-1,-2)] # Delete unecessary column
+# Aufteilen der Spalten in einzelne Matrizen zur Erstellung von Untermatritzen
 
-new_data_bestandteile_oem1_typ12 <- new_data_bestandteile_oem1_typ11 %>%
-  filter(grepl("K1DI1",ID_Motor,fixed=TRUE))%>%
-  select(ID_Motor,ID_Fahrzeug)
-
-new_data_fahrzeug_OEM1_Typ11 <- data_fahrzeug_OEM1_Typ11 %>%
-  select(ID_Fahrzeug,Produktionsdatum,Herstellernummer,Werksnummer)%>%
-  filter(between(Produktionsdatum, as.Date("2008-03-01"),
-                                  as.Date("2012-05-11")))# Filter after the relevant time period for more information: https://stackoverflow.com/questions/28335715/r-how-to-filter-subset-a-sequence-of-dates
-  
-
-new_data_fahrzeug_OEM1_Typ12 <- data_fahrzeug_OEM1_Typ12 %>%
-  select(ID_Fahrzeug,Produktionsdatum,Herstellernummer,Werksnummer)%>%
-  filter(between(Produktionsdatum, as.Date("2008-03-01"),
-                                  as.Date("2012-05-11")))
-
-# Hier gehts morgen weiter
 x_data_Komponente_K1DI1 <- data_Komponente_K1DI1%>%
   select(ID_Motor.x,Produktionsdatum.x,Herstellernummer.x,Werksnummer.x)%>%
   filter(between(Produktionsdatum.x, as.Date("2008-03-01"), as.Date("2012-05-11")))%>%
@@ -156,32 +134,65 @@ z_data_Komponente_K1DI1 <- data_Komponente_K1DI1%>%
 
 xy_data_Komponente_K1DI1<- bind_rows(x_data_Komponente_K1DI1,y_data_Komponente_K1DI1)
 new_data_Komponente_K1DI1<- bind_rows(xy_data_Komponente_K1DI1,z_data_Komponente_K1DI1)
-  
-  
-new_data_Komponente_K1DI1 <- data_Komponente_K1DI1%>%
-  select(ID_Motor.x,Produktionsdatum.x,Herstellernummer.x,Werksnummer.x,ID_Motor.y,Produktionsdatum.y,
-         Herstellernummer.y,Werksnummer.y,ID_Motor,Produktionsdatum,Herstellernummer,Werksnummer)%>%
-  filter(between(Produktionsdatum, as.Date("2008-03-01"), as.Date("2012-05-11")) | between(Produktionsdatum.x,
-        as.Date("2008-03-01"), as.Date("2012-05-11")) | between(Produktionsdatum, as.Date("2008-03-01"),  as.Date("2012-05-11")))
 
+rm(x_data_Komponente_K1DI1,y_data_Komponente_K1DI1,z_data_Komponente_K1DI1,xy_data_Komponente_K1DI1) # delete Zwischenspeicher
 
 ```
-## Creaing one Data set
+
+# Tidy Data
+Now the data have to be tidy up
+```{r}
+
+new_data_bestandteile_oem1_typ11 <- data_bestandteile_oem1_typ11 %>%
+  filter(grepl("K1DI1",ID_Motor,fixed=TRUE))%>% # Filter after the relevant motor for more information : https://www.rdocumentation.org/packages/dplyr/versions/0.7.8/topics/filter
+  select(ID_Motor,ID_Fahrzeug) #Select relevant coulums
+  
+
+new_data_bestandteile_oem1_typ12 <- new_data_bestandteile_oem1_typ11 %>%
+  filter(grepl("K1DI1",ID_Motor,fixed=TRUE))%>%
+  select(ID_Motor,ID_Fahrzeug)
+
+new_data_fahrzeug_OEM1_Typ11 <- data_fahrzeug_OEM1_Typ11 %>%
+  select(ID_Fahrzeug,Produktionsdatum)%>% # select relevant columns
+  filter(between(Produktionsdatum, as.Date("2008-03-01"),
+                                  as.Date("2012-05-11")))# Filter after the relevant time period for more information: https://stackoverflow.com/questions/28335715/r-how-to-filter-subset-a-sequence-of-dates
+  
+
+new_data_fahrzeug_OEM1_Typ12 <- data_fahrzeug_OEM1_Typ12 %>%
+  select(ID_Fahrzeug,Produktionsdatum)%>%
+  filter(between(Produktionsdatum, as.Date("2008-03-01"),
+                                  as.Date("2012-05-11")))
+
+# Tidy data_Zulassung
+new_data_Zulassung <- data_Zulassung %>%
+  rename(ID_Fahrzeug=IDNummer)%>% # Rename column for consistency
+  select(ID_Fahrzeug,Gemeinden,Zulassung)%>% # Select relevant columns
+  mutate(ID_Fahrzeug_Nummer = as.integer64(str_replace_all(ID_Fahrzeug,"-",""))) # Add ID_Fahrzueg as integer column for further calculations
+
+```
+# Creaing one Data set
 ```{r}
 data_bestandteile_OEM1 <- bind_rows(new_data_bestandteile_oem1_typ11, 
                                     new_data_bestandteile_oem1_typ12)%>% # Get one date set from Type 11 and type 12
-  mutate(ID_Fahrzeug_Nummer= as.integer(str_replace_all(ID_Fahrzeug,"-","")))# Get integer value for later join
+  mutate(ID_Fahrzeug_Nummer= as.integer64(str_replace_all(ID_Fahrzeug,"-","")))# Get integer value for later join
 
   
 
 data_fahrzeug_OEM1 <- bind_rows(new_data_fahrzeug_OEM1_Typ11,
                                 new_data_fahrzeug_OEM1_Typ12)%>% # Get one date set from Type 11 and type 12
-  mutate(ID_Fahrzeug_Nummer= as.integer(str_replace_all(ID_Fahrzeug,"-","")))# Get integer value for later join    
+  mutate(ID_Fahrzeug_Nummer= as.integer64(str_replace_all(ID_Fahrzeug,"-","")))# Get integer value for later join    
 
-# Left_join die richtige Wahl oder Right join
+
 data_OEM <- left_join(data_bestandteile_OEM1,data_fahrzeug_OEM1,
-                       by="ID_Fahrzeug_Nummer",na_matches="never") # Get Dataset to get engine and production date. Dealing with NA see: https://stackoverflow.com/questions/58454706/how-do-i-fix-error-stdbad-alloc-message-when-using-dplyr-full-join-to-join-3
-
+                       by="ID_Fahrzeug_Nummer",na_matches="never")%>%# Get Dataset to get engine and production date. Dealing with NA see: https://stackoverflow.com/questions/58454706/how-do-i-fix-error-stdbad-alloc-message-when-using-dplyr-full-join-to-join-3
+            rename(ID_Fahrzeug = ID_Fahrzeug.x)
+  
 data_OEM$ID_Fahrzeug.y <- NULL
+
+data_fahrzeugZulassung <- left_join(data_OEM,new_data_Zulassung,by="ID_Fahrzeug_Nummer")%>%# Joining cars with Zulassung
+  rename(ID_Fahrzeug = ID_Fahrzeug.x)
+data_fahrzeugZulassung$ID_Fahrzeug.y <- NULL
+
+
 ```
 
