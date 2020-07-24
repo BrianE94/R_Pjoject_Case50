@@ -25,7 +25,7 @@ if(!require("install.load")){
 }
 library(install.load)
 
-install_load("readr", "tidyverse", "stringr", "readxl","ggplot2", "plotly","lubridate", "data.table","bit64")
+install_load("readr", "tidyverse", "stringr", "readxl","ggplot2", "plotly","lubridate", "data.table","bit64","tm")
 ```
 #Functions
 ```{r}
@@ -75,9 +75,11 @@ data_fahrzeug_OEM1_Typ12$Fehlerhaft_Datum <- as.Date(data_fahrzeug_OEM1_Typ12$Fe
 
 # Ort und Zulassung
 data_bundesland_plz_ort <- read_excel("./Data/Zulassungen/OpenGeoDB_bundesland_plz_ort_de (1).xls", col_names = c("Bundesland","PLZ","Ort"))
+data_bundesland_plz_ort$Ort <- removeNumbers(data_bundesland_plz_ort$Ort)#https://stackoverflow.com/questions/13590139/remove-numbers-from-alphanumeric-characters
 
-data_Zulassung <- read_csv2("./Data/Zulassungen/Zulassungen_alle_Fahrzeuge.csv")
-
+data_Zulassung <- read_csv2("./Data/Zulassungen/Zulassungen_alle_Fahrzeuge.csv")%>%
+  rename(Ort=Gemeinden)
+data_Zulassung$Ort <- str_to_title(data_Zulassung$Ort) # Pipe-operator with mutate doesn't work
 ```
 
 ```{r}
@@ -166,33 +168,37 @@ new_data_fahrzeug_OEM1_Typ12 <- data_fahrzeug_OEM1_Typ12 %>%
 # Tidy data_Zulassung
 new_data_Zulassung <- data_Zulassung %>%
   rename(ID_Fahrzeug=IDNummer)%>% # Rename column for consistency
-  select(ID_Fahrzeug,Gemeinden,Zulassung)%>% # Select relevant columns
+  select(ID_Fahrzeug,Ort,Zulassung)%>% # Select relevant columns
   mutate(ID_Fahrzeug_Nummer = as.integer64(str_replace_all(ID_Fahrzeug,"-",""))) # Add ID_Fahrzueg as integer column for further calculations
 
 ```
 # Creaing one Data set
 ```{r}
+#Summarise datatset bestandteile from oem1 Typ 11/12
 data_bestandteile_OEM1 <- bind_rows(new_data_bestandteile_oem1_typ11, 
                                     new_data_bestandteile_oem1_typ12)%>% # Get one date set from Type 11 and type 12
   mutate(ID_Fahrzeug_Nummer= as.integer64(str_replace_all(ID_Fahrzeug,"-","")))# Get integer value for later join
 
-  
-
+#Summarise datatset Fahrzeug from oem1 Typ 11/12
 data_fahrzeug_OEM1 <- bind_rows(new_data_fahrzeug_OEM1_Typ11,
                                 new_data_fahrzeug_OEM1_Typ12)%>% # Get one date set from Type 11 and type 12
   mutate(ID_Fahrzeug_Nummer= as.integer64(str_replace_all(ID_Fahrzeug,"-","")))# Get integer value for later join    
 
-
+# Left or Right Join ????
+# One data set for OEM
 data_OEM <- left_join(data_bestandteile_OEM1,data_fahrzeug_OEM1,
                        by="ID_Fahrzeug_Nummer",na_matches="never")%>%# Get Dataset to get engine and production date. Dealing with NA see: https://stackoverflow.com/questions/58454706/how-do-i-fix-error-stdbad-alloc-message-when-using-dplyr-full-join-to-join-3
             rename(ID_Fahrzeug = ID_Fahrzeug.x)
-  
 data_OEM$ID_Fahrzeug.y <- NULL
 
-data_fahrzeugZulassung <- left_join(data_OEM,new_data_Zulassung,by="ID_Fahrzeug_Nummer")%>%# Joining cars with Zulassung
-  rename(ID_Fahrzeug = ID_Fahrzeug.x)
-data_fahrzeugZulassung$ID_Fahrzeug.y <- NULL
+# Left or Right Join ????
+# One data set for location
+data_Ort <- left_join(new_data_Zulassung,data_bundesland_plz_ort, by="Ort")
 
+# get final dataset by joining location and OEM data set
+final_data_Group_50 <- full_join(data_OEM,new_data_Zulassung,by="ID_Fahrzeug_Nummer")%>%# Joining cars with Zulassung
+  rename(ID_Fahrzeug = ID_Fahrzeug.x)
+final_data_Group_50$ID_Fahrzeug.y <- NULL
 
 ```
 
