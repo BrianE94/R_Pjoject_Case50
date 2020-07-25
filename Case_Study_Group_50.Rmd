@@ -74,12 +74,23 @@ data_fahrzeug_OEM1_Typ12$Fehlerhaft_Datum <- as.Date(data_fahrzeug_OEM1_Typ12$Fe
 
 
 # Ort und Zulassung
-data_bundesland_plz_ort <- read_excel("./Data/Zulassungen/OpenGeoDB_bundesland_plz_ort_de (1).xls", col_names = c("Bundesland","PLZ","Ort"))
+data_bundesland_plz_ort <- read_excel("./Data/Zulassungen/OpenGeoDB_bundesland_plz_ort_de (1).xls", col_names = c("Bundesland","PLZ","Ort"))%>%
+  add_row(Bundesland="Bayern",PLZ="87637",Ort="Seeg")
 data_bundesland_plz_ort$Ort <- removeNumbers(data_bundesland_plz_ort$Ort)#https://stackoverflow.com/questions/13590139/remove-numbers-from-alphanumeric-characters
+data_bundesland_plz_ort$PLZ <- as.integer(data_bundesland_plz_ort$PLZ)
 
 data_Zulassung <- read_csv2("./Data/Zulassungen/Zulassungen_alle_Fahrzeuge.csv")%>%
   rename(Ort=Gemeinden)
 data_Zulassung$Ort <- str_to_title(data_Zulassung$Ort) # Pipe-operator with mutate doesn't work
+data_Zulassung$Ort <- removeNumbers(data_Zulassung$Ort)
+data_Zulassung$X1 <- NULL
+
+data_Geodaten_Gemeinden <- read_csv2("./Data/Geodaten/Geodaten_Gemeinden_v1.2_2017-08-22_TrR.csv",col_types =                                    cols(Postleitzahl=col_integer(),Laengengrad=col_double(),Breitengrad=col_double()))%>%
+  rename(Ort=Gemeinde,PLZ= Postleitzahl)%>%
+  add_row(PLZ=87637,Ort="Seeg",Laengengrad=10.6104157,Breitengrad=47.6542215)
+  
+data_Geodaten_Gemeinden$Ort <- str_to_title(data_Geodaten_Gemeinden$Ort)
+data_Geodaten_Gemeinden <- data_Geodaten_Gemeinden[,c(-1,-2)]
 ```
 
 ```{r}
@@ -193,7 +204,11 @@ data_OEM$ID_Fahrzeug.y <- NULL
 
 # Left or Right Join ????
 # One data set for location
-data_Ort <- left_join(new_data_Zulassung,data_bundesland_plz_ort, by="Ort")
+data_Ort2 <- left_join(data_Geodaten_Gemeinden,data_bundesland_plz_ort, by="PLZ")%>%
+  rename(Ort=Ort.x)
+data_Ort2$Ort.y <- NULL
+
+data_Ort <- left_join(new_data_Zulassung,data_Ort2, by="Ort")
 
 # get final dataset by joining location and OEM data set
 final_data_Group_50 <- full_join(data_OEM,new_data_Zulassung,by="ID_Fahrzeug_Nummer")%>%# Joining cars with Zulassung
