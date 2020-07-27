@@ -14,7 +14,7 @@ if(!require("install.load")){
 }
 library(install.load)
 
-install_load("shiny", "leaflet", "htmltools", "highcharter","ggplot2", "maps","dplyr","tidyverse","rvest","raster","sf","rgeos")
+install_load("shiny", "leaflet", "htmltools", "highcharter","ggplot2", "maps","dplyr","tidyverse","rvest","raster","sf","rgeos","plotly")
 
 
 # Define UI for application that draws a histogram
