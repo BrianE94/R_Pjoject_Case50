@@ -153,16 +153,22 @@ data_Ort2 <- left_join(data_Geodaten_Gemeinden,data_bundesland_plz_ort, by="PLZ"
   rename(Ort=Ort.x)%>%
   distinct(Ort, .keep_all=TRUE)
 data_Ort2$Ort.y <- NULL
-
+#Get Mean Coord from Hamburg 
+data_Ort2 %>%
+  filter(Bundesland=="Hamburg")%>%
+  select(Laengengrad, Breitengrad)%>%
+  apply(2, mean)
 #Calculate distance from Hamburg for every City
 dist<-c()
 data_Ort2_matrix <- data_Ort2 %>%
   select(Laengengrad, Breitengrad)%>%
   data.matrix()
 for (i in 1:nrow(data_Ort2)){
-   calc <- as.integer(distm(c(data_Ort2_matrix[i,1],data_Ort2_matrix[i,2]),c(9.993682,53.551085),fun=distGeo))
+   calc <- as.integer(distm(c(data_Ort2_matrix[i,1],data_Ort2_matrix[i,2]),c(10.19271, 53.57436),fun=distGeo))
    dist[i]<-calc
 }
+
+#coord Hamburg 9.993682,53.551085
 #Cbinding distance calculation to the data_Ort2 Dataframe 
 data_Ort2<-cbind(data_Ort2,dist)
 
