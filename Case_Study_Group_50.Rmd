@@ -154,6 +154,19 @@ data_Ort2 <- left_join(data_Geodaten_Gemeinden,data_bundesland_plz_ort, by="PLZ"
   distinct(Ort, .keep_all=TRUE)
 data_Ort2$Ort.y <- NULL
 
+#Calculate distance from Hamburg for every City
+dist<-c()
+data_Ort2_matrix <- data_Ort2 %>%
+  select(Laengengrad, Breitengrad)%>%
+  data.matrix()
+for (i in 1:nrow(data_Ort2)){
+   calc <- as.integer(distm(c(data_Ort2_matrix[i,1],data_Ort2_matrix[i,2]),c(9.993682,53.551085),fun=distGeo))
+   dist[i]<-calc
+}
+#Cbinding distance calculation to the data_Ort2 Dataframe 
+data_Ort2<-cbind(data_Ort2,dist)
+
+
 data_Ort <- left_join(new_data_Zulassung,data_Ort2, by="Ort")
 
 # get final dataset by joining location and OEM data set
@@ -167,21 +180,6 @@ final_data_Group_50$ID_Fahrzeug.y <- NULL
 
 ```{r}
 #read://https_www.kompf.de/?url=https%3A%2F%2Fwww.kompf.de%2Fgps%2Fdistcalc.html
-final_data_Group_50_matrix<-final_data_Group_50%>%
-  select(Laengengrad, Breitengrad)%>%
-  head(5)%>%
-  data.matrix()
+#Distance Calculation has been moved to "Creation of one Data Set" 
 
-
-final_data_Group_50_test <- final_data_Group_50_matrix%>%
-  head(5)%>%
-  rowwise %>%
-  distm(.,c(9.993682,53.551085),fun=distGeo)
-
-    
-#pmap(final_data_Group_50_matrix[,1],final_data_Group_50_matrix[,2],distm(c(x,y),c(9.993682,53.551085),fun=distGeo))
-    
-dist <- function(laeng,breit){
-  dist=6378.388 * acos(sin(53.551085) * sin(breit) + cos(53.551085) * cos(breit) * cos(laeng - 9.993682))
-}
 ```
