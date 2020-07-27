@@ -25,7 +25,7 @@ if(!require("install.load")){
 }
 library(install.load)
 
-install_load("readr", "tidyverse", "stringr", "readxl","ggplot2", "plotly","lubridate", "data.table","bit64","tm")
+install_load("readr", "tidyverse", "stringr", "readxl","ggplot2", "plotly","lubridate", "data.table","bit64","tm","geosphere","sp")
 ```
 #Functions
 ```{r}
@@ -97,65 +97,6 @@ data_Geodaten_Gemeinden <- data_Geodaten_Gemeinden[,c(-1,-2)]
 
 ```
 
-```{r}
-# Für die Case Stud nicht relevant
-
-# Bestandteile Mototr K1DI1
-data_bestandteile_Komponente_K1DI1 <- read_csv2("./Data/Komponente/Bestandteile_Komponente_K1DI1.csv")# Import data
-data_bestandteile_Komponente_K1DI1$X1 <- NULL # Delete unecessary column
-
-#Einzelteile (1,2,5,6) werden Importiert (für K1DI1); Siehe Case Study Vorbereitung 
-data_einzelteil_t1 <- read_file("./Data/Einzelteil/Einzelteil_T01.txt")%>%
-  str_replace_all("[[|]]"," ")%>% #replace all seperators with simicolon 
-  str_replace_all("     ", ";")%>%
-  str_replace_all(" ","\n")%>%#replace all withespaces with newlines
-  fread()
-data_einzelteil_t1 <- data_einzelteil_t1, col_type=cols(ID_T05.y=col_character(),Produktionsdatum.y=col_date(format=""),Herstellernummer.y=col_character(),Werksnummer.y=col_character(),  Fehlerhaft.y = col_logical(), Fehlerhaft_Datum.y = col_date(format=""), Fehlerhaft_Fahrleistung.y = col_character())
-
-data_einzelteil_t2 <- read_file("./Data/Einzelteil/Einzelteil_T02.txt")%>%
-  str_replace_all("  ",";")%>%
-  str_replace_all("\t","\n")%>%
-  fread()
-data_einzelteil_t2 <- data_einzelteil_t2[,c(-1,-2)]
-
-data_einzelteil_t5 <- read_csv("./Data/Einzelteil/Einzelteil_T05.csv", col_type=cols(ID_T05.y=col_character(),Produktionsdatum.y=col_date(format=""),Herstellernummer.y=col_character(),Werksnummer.y=col_character(),  Fehlerhaft.y = col_logical(), Fehlerhaft_Datum.y = col_date(format=""), Fehlerhaft_Fahrleistung.y = col_character()))
-class(data_einzelteil_t5$ID_T05.y)
-data_einzelteil_t5 <- data_einzelteil_t5[,c(-1,-2)]
-
-data_einzelteil_t6 <- read_csv("./Data/Einzelteil/Einzelteil_T05.csv",col_type=cols(ID_T05.y=col_character(),Produktionsdatum.y=col_date(format=""),Herstellernummer.y=col_character(),Werksnummer.y=col_character(),  Fehlerhaft.y = col_logical(), Fehlerhaft_Datum.y = col_date(format=""), Fehlerhaft_Fahrleistung.y = col_character()))
-data_einzelteil_t6 <- data_einzelteil_t6[,c(-1,-2)]
-
-#Komonenete K1DI1 wahrscheinlich unwichtig
-
-#Komponente K1DI1
-data_Komponente_K1DI1 <- read_csv("./Data/Komponente/Komponente_K1DI1.csv", col_type=cols(ID_Motor.y=col_character(), Produktionsdatum.y=col_date(format=""), Herstellernummer.y=col_integer(),Werksnummer.y=col_integer(), Fehlerhaft.y = col_logical(), Fehlerhaft_Datum.y = col_date(format=""), Fehlerhaft_Fahrleistung.y = col_character(),ID_Motor= col_character(),Produktionsdatum=col_date(format=""),Herstellernummer=col_integer(),Werksnummer=col_integer()))# Import data
-data_Komponente_K1DI1 <- data_Komponente_K1DI1[,c(-1,-2)] # Delete unecessary column
-# Aufteilen der Spalten in einzelne Matrizen zur Erstellung von Untermatritzen
-
-x_data_Komponente_K1DI1 <- data_Komponente_K1DI1%>%
-  select(ID_Motor.x,Produktionsdatum.x,Herstellernummer.x,Werksnummer.x)%>%
-  filter(between(Produktionsdatum.x, as.Date("2008-03-01"), as.Date("2012-05-11")))%>%
-  rename(ID_Motor=ID_Motor.x,Produktionsdatum=Produktionsdatum.x,Herstellernummer=Herstellernummer.x,
-         Werksnummer=Werksnummer.x)
-
-
-y_data_Komponente_K1DI1 <- data_Komponente_K1DI1%>%
-  select(ID_Motor.y,Produktionsdatum.y,Herstellernummer.y,Werksnummer.y)%>%
-  filter(between(Produktionsdatum.y, as.Date("2008-03-01"), as.Date("2012-05-11")))%>%
-  rename(ID_Motor=ID_Motor.y,Produktionsdatum=Produktionsdatum.y,Herstellernummer=Herstellernummer.y,
-         Werksnummer=Werksnummer.y)
-
-z_data_Komponente_K1DI1 <- data_Komponente_K1DI1%>%
-  select(ID_Motor,Produktionsdatum,Herstellernummer,Werksnummer)%>%
-  filter(between(Produktionsdatum, as.Date("2008-03-01"), as.Date("2012-05-11")))
-
-xy_data_Komponente_K1DI1<- bind_rows(x_data_Komponente_K1DI1,y_data_Komponente_K1DI1)
-new_data_Komponente_K1DI1<- bind_rows(xy_data_Komponente_K1DI1,z_data_Komponente_K1DI1)
-
-rm(x_data_Komponente_K1DI1,y_data_Komponente_K1DI1,z_data_Komponente_K1DI1,xy_data_Komponente_K1DI1) # delete Zwischenspeicher
-
-```
-
 # Tidy Data
 Now the data have to be tidy up
 ```{r}
@@ -222,3 +163,25 @@ final_data_Group_50$ID_Fahrzeug.y <- NULL
 
 ```
 
+# Calculation of distances (to/from Hamburg)
+
+```{r}
+#read://https_www.kompf.de/?url=https%3A%2F%2Fwww.kompf.de%2Fgps%2Fdistcalc.html
+final_data_Group_50_matrix<-final_data_Group_50%>%
+  select(Laengengrad, Breitengrad)%>%
+  head(5)%>%
+  data.matrix()
+
+
+final_data_Group_50_test <- final_data_Group_50_matrix%>%
+  head(5)%>%
+  rowwise %>%
+  distm(.,c(9.993682,53.551085),fun=distGeo)
+
+    
+#pmap(final_data_Group_50_matrix[,1],final_data_Group_50_matrix[,2],distm(c(x,y),c(9.993682,53.551085),fun=distGeo))
+    
+dist <- function(laeng,breit){
+  dist=6378.388 * acos(sin(53.551085) * sin(breit) + cos(53.551085) * cos(breit) * cos(laeng - 9.993682))
+}
+```
