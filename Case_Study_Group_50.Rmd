@@ -77,7 +77,8 @@ data_fahrzeug_OEM1_Typ12$Fehlerhaft_Datum <- as.Date(data_fahrzeug_OEM1_Typ12$Fe
 data_bundesland_plz_ort <- read_excel("./Data/Zulassungen/OpenGeoDB_bundesland_plz_ort_de (1).xls", col_names = c("Bundesland","PLZ","Ort"))%>%
   add_row(Bundesland="Bayern",PLZ="87637",Ort="Seeg")
 data_bundesland_plz_ort$Ort <- removeNumbers(data_bundesland_plz_ort$Ort)#https://stackoverflow.com/questions/13590139/remove-numbers-from-alphanumeric-characters
-data_bundesland_plz_ort$PLZ <- as.integer(data_bundesland_plz_ort$PLZ)
+#Problem mit Länge der PLZ bei Transformation zu integer (see "Leading Zeros")
+#data_bundesland_plz_ort$PLZ <- as.integer(data_bundesland_plz_ort$PLZ)
 
 data_Zulassung <- read_csv2("./Data/Zulassungen/Zulassungen_alle_Fahrzeuge.csv")%>%
   rename(Ort=Gemeinden)
@@ -85,12 +86,15 @@ data_Zulassung$Ort <- str_to_title(data_Zulassung$Ort) # Pipe-operator with muta
 data_Zulassung$Ort <- removeNumbers(data_Zulassung$Ort)
 data_Zulassung$X1 <- NULL
 
-data_Geodaten_Gemeinden <- read_csv2("./Data/Geodaten/Geodaten_Gemeinden_v1.2_2017-08-22_TrR.csv",col_types =                                    cols(Postleitzahl=col_integer(),Laengengrad=col_double(),Breitengrad=col_double()))%>%
+data_Geodaten_Gemeinden <- read_csv2("./Data/Geodaten/Geodaten_Gemeinden_v1.2_2017-08-22_TrR.csv",col_types =                                    cols(Postleitzahl=col_character(),Laengengrad=col_double(),Breitengrad=col_double()))%>%
   rename(Ort=Gemeinde,PLZ= Postleitzahl)%>%
-  add_row(PLZ=87637,Ort="Seeg",Laengengrad=10.6104157,Breitengrad=47.6542215)
-  
+  add_row(PLZ="87637",Ort="Seeg",Laengengrad=10.6104157,Breitengrad=47.6542215)
+# Add missing Zeros to PLZ length under 5, for more info see https://stackoverflow.com/questions/5812493/how-to-add-leading-zeros
+data_Geodaten_Gemeinden$PLZ <- str_pad(data_Geodaten_Gemeinden$PLZ,5,pad = "0") 
+data_Geodaten_Gemeinden$Ort <- removeNumbers(data_Geodaten_Gemeinden$Ort)
 data_Geodaten_Gemeinden$Ort <- str_to_title(data_Geodaten_Gemeinden$Ort)
 data_Geodaten_Gemeinden <- data_Geodaten_Gemeinden[,c(-1,-2)]
+
 ```
 
 ```{r}
@@ -205,13 +209,14 @@ data_OEM$ID_Fahrzeug.y <- NULL
 # Left or Right Join ????
 # One data set for location
 data_Ort2 <- left_join(data_Geodaten_Gemeinden,data_bundesland_plz_ort, by="PLZ")%>%
-  rename(Ort=Ort.x)
+  rename(Ort=Ort.x)%>%
+  distinct(Ort, .keep_all=TRUE)
 data_Ort2$Ort.y <- NULL
 
 data_Ort <- left_join(new_data_Zulassung,data_Ort2, by="Ort")
 
 # get final dataset by joining location and OEM data set
-final_data_Group_50 <- full_join(data_OEM,new_data_Zulassung,by="ID_Fahrzeug_Nummer")%>%# Joining cars with Zulassung
+final_data_Group_50 <- left_join(data_OEM,data_Ort,by="ID_Fahrzeug_Nummer")%>%# Joining cars with Zulassung
   rename(ID_Fahrzeug = ID_Fahrzeug.x)
 final_data_Group_50$ID_Fahrzeug.y <- NULL
 
