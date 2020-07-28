@@ -19,34 +19,36 @@ install_load("shiny", "leaflet", "htmltools", "highcharter","ggplot2", "maps","d
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
-
+    
+    #test for map
+    leafletOutput("map"),
     # Application title
-    titlePanel("Defected Cars in Germany"),
+    titlePanel("Placeholder"),
 
     # Sidebar with a slider input for number of bins 
-    sidebarLayout(
-        sidebarPanel(
-            sliderInput("bins",
-                        "Number of bins:",
-                        min = 1,
-                        max = 50,
-                        value = 30)
-        ),
+    #sidebarLayout(
+       # sidebarPanel(
+        #    sliderInput("bins",
+         #               "Number of bins:",
+         #               min = 1,
+         #               max = 50,
+          #              value = 30)
+       #),
 
         # Show a plot of the generated distribution
-        mainPanel(
-           plotOutput("distPlot")
-        )
-    )
+        #mainPanel(
+            
+        #)
+    #)
 )
 
 # Define server logic required to draw a histogram
 server <- function(input, output) {
-
+    output$map <- leaflet()%>%
+        addTiles()%>%
+        addMarkers(final_data_Group_50, lng=~Laengengrad, lat=~Breitengrad)
     
 }
 
 # Run the application 
 shinyApp(ui = ui, server = server)
-
-#test
