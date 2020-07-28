@@ -16,7 +16,9 @@ library(install.load)
 
 install_load("shiny", "leaflet", "htmltools", "highcharter","ggplot2", "maps","dplyr","tidyverse","rvest","raster","sf","rgeos","plotly")
 
-
+#test 
+test <- final_data_Group_50%>%
+  head(50)
 # Define UI for application that draws a histogram
 ui <- fluidPage(
     
@@ -44,10 +46,11 @@ ui <- fluidPage(
 
 # Define server logic required to draw a histogram
 server <- function(input, output) {
-    output$map <- leaflet()%>%
+    output$map <- renderLeaflet({
+        leaflet(test)%>%
         addTiles()%>%
-        addMarkers(data=final_data_Group_50,lng=~Laengengrad, lat=~Breitengrad)
-    
+        addMarkers(lng=~Laengengrad, lat=~Breitengrad)
+    })
 }
 
 # Run the application 

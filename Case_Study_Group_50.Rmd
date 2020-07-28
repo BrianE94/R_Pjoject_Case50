@@ -145,6 +145,8 @@ data_fahrzeug_OEM1 <- bind_rows(new_data_fahrzeug_OEM1_Typ11,
 data_OEM <- left_join(data_fahrzeug_OEM1,data_bestandteile_OEM1,
                        by="ID_Fahrzeug_Nummer",na_matches="never")%>%# Get Dataset to get engine and production date. Dealing with NA see: https://stackoverflow.com/questions/58454706/how-do-i-fix-error-stdbad-alloc-message-when-using-dplyr-full-join-to-join-3
             rename(ID_Fahrzeug = ID_Fahrzeug.x)
+data_OEM <- data_OEM[!is.na(data_OEM$ID_Motor),]
+  
 data_OEM$ID_Fahrzeug.y <- NULL
 
 # Left or Right Join ????
