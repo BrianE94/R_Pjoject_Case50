@@ -154,7 +154,7 @@ data_Ort2 <- left_join(data_Geodaten_Gemeinden,data_bundesland_plz_ort, by="PLZ"
   distinct(Ort, .keep_all=TRUE)
 data_Ort2$Ort.y <- NULL
 #Get Mean Coord from Hamburg 
-data_Ort2 %>%
+hamburg_coord<-data_Ort2 %>%
   filter(Bundesland=="Hamburg")%>%
   select(Laengengrad, Breitengrad)%>%
   apply(2, mean)
@@ -164,11 +164,12 @@ data_Ort2_matrix <- data_Ort2 %>%
   select(Laengengrad, Breitengrad)%>%
   data.matrix()
 for (i in 1:nrow(data_Ort2)){
-   calc <- as.integer(distm(c(data_Ort2_matrix[i,1],data_Ort2_matrix[i,2]),c(10.19271, 53.57436),fun=distGeo))
-   dist[i]<-calc
+   calc <- as.integer(distm(c(data_Ort2_matrix[i,1],data_Ort2_matrix[i,2]),hamburg_coord,fun=distGeo))
+   #https://cran.r-project.org/web/packages/geosphere/geosphere.pdf
+   dist[i]<-calc/1000  # Assign to vector and convert to km 
 }
 
-#coord Hamburg 9.993682,53.551085
+
 #Cbinding distance calculation to the data_Ort2 Dataframe 
 data_Ort2<-cbind(data_Ort2,dist)
 
@@ -182,10 +183,3 @@ final_data_Group_50$ID_Fahrzeug.y <- NULL
 
 ```
 
-# Calculation of distances (to/from Hamburg)
-
-```{r}
-#read://https_www.kompf.de/?url=https%3A%2F%2Fwww.kompf.de%2Fgps%2Fdistcalc.html
-#Distance Calculation has been moved to "Creation of one Data Set" 
-
-```
