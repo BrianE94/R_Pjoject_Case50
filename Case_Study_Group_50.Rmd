@@ -183,5 +183,7 @@ final_data_Group_50 <- left_join(data_OEM,data_Ort,by="ID_Fahrzeug_Nummer")%>%# 
   rename(ID_Fahrzeug = ID_Fahrzeug.x)
 final_data_Group_50$ID_Fahrzeug.y <- NULL
 
+#saving dataset final_data_Group_50
+save(final_data_Group_50, file="final_data_Group_50.Rda")
 ```
 
