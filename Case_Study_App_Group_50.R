@@ -46,7 +46,7 @@ ui <- fluidPage(
 server <- function(input, output) {
     output$map <- leaflet()%>%
         addTiles()%>%
-        addMarkers(final_data_Group_50, lng=~Laengengrad, lat=~Breitengrad)
+        addMarkers(data=final_data_Group_50,lng=~Laengengrad, lat=~Breitengrad)
     
 }
 
