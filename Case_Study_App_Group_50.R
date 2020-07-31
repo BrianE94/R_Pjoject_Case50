@@ -27,7 +27,7 @@ ui <- fluidPage(
     # Application title
     titlePanel("Placeholder"),
     # Radius Input
-    sliderInput("value", "Selected Radius in km:", min = 25, max= 700,value = 50,step=25),
+    sliderInput("value", "Selected Radius in km:", min = 25000, max= 700000,value = 50000,step=25000),
     #test for map
     leafletOutput("map"),
     #display renderPlot
@@ -47,12 +47,13 @@ server <- function(input, output) {
     })
     # Make a reactve Radius
       distanz <- reactive({
-        test
-        if(!is.null(input$value)){
-          test <-test%>%
-            filter(test$dist <= input$value[1]*1000)
-        }
-        test
+        test%>%
+          filter(test$dist <= input$value[1])
+        # if(!is.null(input$value)){
+        #   test <-test%>%
+        #     filter(test$dist*1000 <= input$value[1])
+        # }
+        # test
       })
     #map output 
     output$map <- renderLeaflet({
@@ -66,9 +67,10 @@ server <- function(input, output) {
       
       #draw the map and add markers
       # See: https://stackoverflow.com/questions/40861908/shiny-r-implement-slider-input
-      test <- distanz()
-        leaflet(test)%>%
+      distanz <- distanz()
+        leaflet(distanz)%>%
         addTiles()%>%
+        # https://rstudio.github.io/leaflet/markers.html  
         addMarkers(lng=~Laengengrad, 
                    lat=~Breitengrad,group="Cluster Marker", 
                    clusterOptions = markerClusterOptions(),
@@ -76,19 +78,21 @@ server <- function(input, output) {
                                 as.character(ID_Fahrzeug),
                                 "\n",
                                 "Produktionsdatum: ",
-                                (Produktionsdatum))
+                                (Produktionsdatum),
+                                "\n",
+                                "Dist",
+                                (dist))
                    )%>%
         addMarkers(lng=9.993682, lat=53.551085, icon=hamburg_marker)%>%
-        addCircles(lng=9.993682, lat=53.551085,radius = input$value[1]*1000)
+        addCircles(lng=9.993682, lat=53.551085,radius = input$value[1])
         
     })
-    
+    # Get Radi for Barplot
     #barplot output
     output$barplot <- renderPlot({
       ggplot(test)+
         geom_histogram(aes(Bundesland), stat="count")
     })
-    # Connect slider bar with
 }
 
 # Run the application 

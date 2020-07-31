@@ -153,9 +153,9 @@ data_Ort2_matrix <- data_Ort2 %>%
   select(Laengengrad, Breitengrad)%>%
   data.matrix()
 for (i in 1:nrow(data_Ort2)){
-   calc <- as.integer(distm(c(data_Ort2_matrix[i,1],data_Ort2_matrix[i,2]),hamburg_coord,fun=distGeo))
+   calc <- round(as.integer(distm(c(data_Ort2_matrix[i,1],data_Ort2_matrix[i,2]),hamburg_coord,fun=distGeo)),digits=0)
    #https://cran.r-project.org/web/packages/geosphere/geosphere.pdf
-   dist[i]<-calc/1000  # Assign to vector and convert to km 
+   dist[i]<-calc   
 }
 
 
