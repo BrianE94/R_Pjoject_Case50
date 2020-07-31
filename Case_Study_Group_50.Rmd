@@ -27,19 +27,7 @@ library(install.load)
 
 install_load("readr", "tidyverse", "stringr", "readxl","ggplot2", "plotly","lubridate", "data.table","bit64","tm","geosphere","sp")
 ```
-#Functions
-```{r}
-ID_to_number <- function(data,ID){
-  F1 <-  separate(data,ID,sep = "-", into = c("v1","v2","v3","v4"))
-  a= toString(ID)+"_Number"
-  F2 <-  unite(F1, v1,v2,v3,v4,col= a,sep="")
 
-  data_bestandteile_OEM1 <- add_column(data_bestandteile_OEM1,F2$ID_Fahrzeug_Nummer)%>%
-    rename(ID_Fahrzeug_Nummer=F2$ID_Fahrzeug_Nummer)
-}
-
-
-```
 
 # Import Data
 Fist the necessary documents have to be imported in the R Markdown file.
@@ -77,14 +65,14 @@ data_fahrzeug_OEM1_Typ12$Fehlerhaft_Datum <- as.Date(data_fahrzeug_OEM1_Typ12$Fe
 data_bundesland_plz_ort <- read_excel("./Data/Zulassungen/OpenGeoDB_bundesland_plz_ort_de (1).xls", col_names = c("Bundesland","PLZ","Ort"))%>%
   add_row(Bundesland="Bayern",PLZ="87637",Ort="Seeg")
 data_bundesland_plz_ort$Ort <- removeNumbers(data_bundesland_plz_ort$Ort)#https://stackoverflow.com/questions/13590139/remove-numbers-from-alphanumeric-characters
-#Problem mit Länge der PLZ bei Transformation zu integer (see "Leading Zeros")
+#Problem mit Länge der PLZ bei Transformation zu integer (see "Leading Zeros") bei Sachsen
 #data_bundesland_plz_ort$PLZ <- as.integer(data_bundesland_plz_ort$PLZ)
 
 data_Zulassung <- read_csv2("./Data/Zulassungen/Zulassungen_alle_Fahrzeuge.csv")%>%
   rename(Ort=Gemeinden)
 data_Zulassung$Ort <- str_to_title(data_Zulassung$Ort) # Pipe-operator with mutate doesn't work
-data_Zulassung$Ort <- removeNumbers(data_Zulassung$Ort)
-data_Zulassung$X1 <- NULL
+data_Zulassung$Ort <- removeNumbers(data_Zulassung$Ort) # Remove unecessary numbers in location
+data_Zulassung$X1 <- NULL # Remove unecessary column
 
 data_Geodaten_Gemeinden <- read_csv2("./Data/Geodaten/Geodaten_Gemeinden_v1.2_2017-08-22_TrR.csv",col_types =                                    cols(Postleitzahl=col_character(),Laengengrad=col_double(),Breitengrad=col_double()))%>%
   rename(Ort=Gemeinde,PLZ= Postleitzahl)%>%
@@ -93,7 +81,7 @@ data_Geodaten_Gemeinden <- read_csv2("./Data/Geodaten/Geodaten_Gemeinden_v1.2_20
 data_Geodaten_Gemeinden$PLZ <- str_pad(data_Geodaten_Gemeinden$PLZ,5,pad = "0") 
 data_Geodaten_Gemeinden$Ort <- removeNumbers(data_Geodaten_Gemeinden$Ort)
 data_Geodaten_Gemeinden$Ort <- str_to_title(data_Geodaten_Gemeinden$Ort)
-data_Geodaten_Gemeinden <- data_Geodaten_Gemeinden[,c(-1,-2)]
+data_Geodaten_Gemeinden <- data_Geodaten_Gemeinden[,c(-1,-2)] # Remove unecessary column
 
 ```
 
@@ -107,8 +95,8 @@ new_data_bestandteile_oem1_typ11 <- data_bestandteile_oem1_typ11 %>%
   
 
 new_data_bestandteile_oem1_typ12 <- new_data_bestandteile_oem1_typ11 %>%
-  filter(grepl("K1DI1",ID_Motor,fixed=TRUE))%>%
-  select(ID_Motor,ID_Fahrzeug)
+  filter(grepl("K1DI1",ID_Motor,fixed=TRUE))%>% # Filter for relevant motor 
+  select(ID_Motor,ID_Fahrzeug)# select necessary columns
 
 new_data_fahrzeug_OEM1_Typ11 <- data_fahrzeug_OEM1_Typ11 %>%
   select(ID_Fahrzeug,Produktionsdatum)%>% # select relevant columns
@@ -117,8 +105,8 @@ new_data_fahrzeug_OEM1_Typ11 <- data_fahrzeug_OEM1_Typ11 %>%
   
 
 new_data_fahrzeug_OEM1_Typ12 <- data_fahrzeug_OEM1_Typ12 %>%
-  select(ID_Fahrzeug,Produktionsdatum)%>%
-  filter(between(Produktionsdatum, as.Date("2008-03-01"),
+  select(ID_Fahrzeug,Produktionsdatum)%>% # select necessary columns
+  filter(between(Produktionsdatum, as.Date("2008-03-01"), #Filter for relevant timeperiod
                                   as.Date("2012-05-11")))
 
 # Tidy data_Zulassung
@@ -140,7 +128,6 @@ data_fahrzeug_OEM1 <- bind_rows(new_data_fahrzeug_OEM1_Typ11,
                                 new_data_fahrzeug_OEM1_Typ12)%>% # Get one date set from Type 11 and type 12
   mutate(ID_Fahrzeug_Nummer= as.integer64(str_replace_all(ID_Fahrzeug,"-","")))# Get integer value for later join    
 
-# Left or Right Join ????
 # One data set for OEM
 data_OEM <- left_join(data_fahrzeug_OEM1,data_bestandteile_OEM1,
                        by="ID_Fahrzeug_Nummer",na_matches="never")%>%# Get Dataset to get engine and production date. Dealing with NA see: https://stackoverflow.com/questions/58454706/how-do-i-fix-error-stdbad-alloc-message-when-using-dplyr-full-join-to-join-3
@@ -182,6 +169,7 @@ data_Ort <- left_join(new_data_Zulassung,data_Ort2, by="Ort")
 final_data_Group_50 <- left_join(data_OEM,data_Ort,by="ID_Fahrzeug_Nummer")%>%# Joining cars with Zulassung
   rename(ID_Fahrzeug = ID_Fahrzeug.x)
 final_data_Group_50$ID_Fahrzeug.y <- NULL
+final_data_Group_50$ID_Fahrzeug_Nummer <- NULL
 
 #saving dataset final_data_Group_50
 save(final_data_Group_50, file="final_data_Group_50.Rda")
