@@ -83,17 +83,7 @@ server <- function(input, output) {
         iconWidth = 25, iconHeight = 41,
         iconAnchorX = 25/2, iconAnchorY = 41
       )
-      #Funktion zum hinzufügen von Kreisen
-      circleAdder <- function(x){
-        my_map <- addCircles(my_map,lng=9.993682, lat=53.551085,radius = x, fillOpacity = 0.08, color="#C1A32D",  fillColor = "blue")
-      }
       
-      circleLoop <- function(data_input){
-        for (i in 1:length(data_input)){
-          circleAdder(data_input[i])
-        }
-      }
-
       #draw the map and add markers
       # See: https://stackoverflow.com/questions/40861908/shiny-r-implement-slider-input
       distanz <- distanz()
@@ -113,13 +103,15 @@ server <- function(input, output) {
                                 (dist))
                    )%>%
         addMarkers(lng=9.993682, lat=53.551085, icon=hamburg_marker)
+        
         #Adds Radius/ Circle arround Hamburg to the map
-        #addCircles(lng=9.993682, lat=53.551085,radius = as.integer(input$value[1]), fillOpacity = 0.08, color="#C1A32D",  fillColor = "blue")
         rad <- as.integer(input$value)
         rad_frame <- data.frame(rad)
         #Color platte for coloring circles with different radius
+        #https://rstudio.github.io/leaflet/colors.html
+        #https://cfss.uchicago.edu/notes/leaflet/
         pal <- colorFactor("Dark2", rad_frame$rad)
-        my_map <- addCircles(map=my_map, data=rad_frame, lng=9.993682, lat=53.551085,radius = ~rad, fillOpacity = 0.08, color = ~pal(rad_frame$rad), fillColor = "transparent")
+        my_map <- addCircles(map=my_map, data=rad_frame, lng=9.993682, lat=53.551085,radius = ~rad, fillOpacity = 0.08, color = ~pal(rad_frame$rad), fillColor = ~pal(rad_frame$rad))
         
     })
     
