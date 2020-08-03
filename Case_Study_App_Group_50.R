@@ -21,11 +21,27 @@ load(file="final_data_Group_50.Rda")
 
 #test: First run with 1000  
 test <- final_data_Group_50%>%
-  head(10000)
+  head(1000)
+
+
 # Define UI for application that draws a histogram
 ui <- fluidPage(
+    #change font https://shiny.rstudio.com/articles/css.html
+    tags$head(
+      tags$style(HTML("
+        @import url('https://fonts.googleapis.com/css2?family=Anton&display=swap');
+        
+        h1 {
+          font-family: 'Lobster', cursive;
+          font-weight: 500;
+          line-height: 1.1;
+          color: #ff0000;
+        }
+  
+      "))
+    ),
     # Application title
-    titlePanel("Placeholder"),
+    headerPanel("Placeholder"),
     # Radius Input
     sliderInput("value", "Selected Radius in km:", min = 25000, max= 700000,value = 50000,step=25000),
     #test for map
@@ -84,13 +100,14 @@ server <- function(input, output) {
                                 (dist))
                    )%>%
         addMarkers(lng=9.993682, lat=53.551085, icon=hamburg_marker)%>%
-        addCircles(lng=9.993682, lat=53.551085,radius = input$value[1])
+        #Adds Radius/ Circle arround Hamburg to the map
+        addCircles(lng=9.993682, lat=53.551085,radius = input$value[1], fillOpacity = 0.08, color="#C1A32D",  fillColor = "blue")
         
     })
     # Get Radi for Barplot
     #barplot output
     output$barplot <- renderPlot({
-      ggplot(test)+
+      ggplot(distanz())+
         geom_histogram(aes(Bundesland), stat="count")
     })
 }
