@@ -14,14 +14,14 @@ if(!require("install.load")){
 }
 library(install.load)
 
-install_load("shiny", "leaflet", "htmltools", "highcharter","ggplot2", "maps","dplyr","tidyverse","rvest","raster","sf","rgeos","plotly","jpeg","png")
+install_load("shiny", "leaflet", "htmltools", "highcharter","ggplot2", "maps","dplyr","tidyverse","rvest","raster","sf","rgeos","plotly","jpeg","png","RColorBrewer")
 
 #load saved dataframe from Case_Study_Group_50.Rmd
 load(file="final_data_Group_50.Rda")
 
 #test: First run with 1000  
 test <- final_data_Group_50%>%
-  head(50000)
+  head(1000)
 
 
 # Define UI for application that draws a histogram
@@ -64,13 +64,16 @@ server <- function(input, output) {
     # Make a reactve Radius
       distanz <- reactive({
         test%>%
-          filter(test$dist <= as.integer(input$value[1]))
+          filter(test$dist <= max(as.integer(input$value)))
         # if(!is.null(input$value)){
         #   test <-test%>%
         #     filter(test$dist*1000 <= input$value[1])
         # }
         # test
       })
+     
+    
+    
     #map output 
     output$map <- renderLeaflet({
       #golden marker for hamburg
@@ -80,11 +83,21 @@ server <- function(input, output) {
         iconWidth = 25, iconHeight = 41,
         iconAnchorX = 25/2, iconAnchorY = 41
       )
+      #Funktion zum hinzufügen von Kreisen
+      circleAdder <- function(x){
+        my_map <- addCircles(my_map,lng=9.993682, lat=53.551085,radius = x, fillOpacity = 0.08, color="#C1A32D",  fillColor = "blue")
+      }
       
+      circleLoop <- function(data_input){
+        for (i in 1:length(data_input)){
+          circleAdder(data_input[i])
+        }
+      }
+
       #draw the map and add markers
       # See: https://stackoverflow.com/questions/40861908/shiny-r-implement-slider-input
       distanz <- distanz()
-        leaflet(distanz)%>%
+        my_map <- leaflet(distanz)%>%
         addTiles()%>%
         # https://rstudio.github.io/leaflet/markers.html  
         addMarkers(lng=~Laengengrad, 
@@ -99,11 +112,17 @@ server <- function(input, output) {
                                 "Dist",
                                 (dist))
                    )%>%
-        addMarkers(lng=9.993682, lat=53.551085, icon=hamburg_marker)%>%
+        addMarkers(lng=9.993682, lat=53.551085, icon=hamburg_marker)
         #Adds Radius/ Circle arround Hamburg to the map
-        addCircles(lng=9.993682, lat=53.551085,radius = as.integer(input$value[1]), fillOpacity = 0.08, color="#C1A32D",  fillColor = "blue")
+        #addCircles(lng=9.993682, lat=53.551085,radius = as.integer(input$value[1]), fillOpacity = 0.08, color="#C1A32D",  fillColor = "blue")
+        rad <- as.integer(input$value)
+        rad_frame <- data.frame(rad)
+        #Color platte for coloring circles with different radius
+        pal <- colorFactor("Dark2", rad_frame$rad)
+        my_map <- addCircles(map=my_map, data=rad_frame, lng=9.993682, lat=53.551085,radius = ~rad, fillOpacity = 0.08, color = ~pal(rad_frame$rad), fillColor = "transparent")
         
     })
+    
     # Get Radi for Barplot
     #barplot output
     output$barplot <- renderPlot({
