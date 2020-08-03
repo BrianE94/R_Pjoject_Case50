@@ -21,7 +21,7 @@ load(file="final_data_Group_50.Rda")
 
 #test: First run with 1000  
 test <- final_data_Group_50%>%
-  head(1000)
+  head(50000)
 
 
 # Define UI for application that draws a histogram
@@ -43,7 +43,7 @@ ui <- fluidPage(
     # Application title
     headerPanel("Placeholder"),
     # Radius Input
-    sliderInput("value", "Selected Radius in km:", min = 25000, max= 700000,value = 50000,step=25000),
+    selectInput("value", "Selected Radius in m:", c(seq(25000, 700000, by=25000)), selected=50000, multiple=TRUE),
     #test for map
     leafletOutput("map"),
     #display renderPlot
@@ -64,7 +64,7 @@ server <- function(input, output) {
     # Make a reactve Radius
       distanz <- reactive({
         test%>%
-          filter(test$dist <= input$value[1])
+          filter(test$dist <= as.integer(input$value[1]))
         # if(!is.null(input$value)){
         #   test <-test%>%
         #     filter(test$dist*1000 <= input$value[1])
@@ -101,7 +101,7 @@ server <- function(input, output) {
                    )%>%
         addMarkers(lng=9.993682, lat=53.551085, icon=hamburg_marker)%>%
         #Adds Radius/ Circle arround Hamburg to the map
-        addCircles(lng=9.993682, lat=53.551085,radius = input$value[1], fillOpacity = 0.08, color="#C1A32D",  fillColor = "blue")
+        addCircles(lng=9.993682, lat=53.551085,radius = as.integer(input$value[1]), fillOpacity = 0.08, color="#C1A32D",  fillColor = "blue")
         
     })
     # Get Radi for Barplot
