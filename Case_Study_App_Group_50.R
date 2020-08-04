@@ -42,14 +42,44 @@ ui <- fluidPage(
     ),
     # Application title
     headerPanel("Placeholder"),
-    # Radius Input
-    selectInput("value", "Selected Radius in m:", c(seq(25000, 700000, by=25000)), selected=50000, multiple=TRUE),
-    #test for map
-    leafletOutput("map"),
-    #display renderPlot
-    plotOutput("barplot"),
-    #display logo
-    uiOutput("Logo")
+    #Creating a sidebarLayout 
+    sidebarLayout(
+      #Creating Sidebar
+      sidebarPanel(
+      # Radius Input
+        selectInput("value", "Select Radius in km:", c(seq(25000, 700000, by=25000)), selected=50000, multiple=TRUE, width = 150), 
+        #multiple choice number of radius
+        selectInput("number", "select number of radius to compare", c(1:8), width= 200),
+        actionButton("reset_input", "Reset inputs"),
+        conditionalPanel(
+          condition = "input.number == 1",
+          sliderInput("n_1","Select Radius", min=25, max = 700, step = 25, value= 50)
+        ), 
+        conditionalPanel(
+          condition = "input.number == 2",
+          sliderInput("n_1","Select Radius", min=25, max = 700, step = 25, value= 50),
+          sliderInput("n_2","Select Radius", min=25, max = 700, step = 25, value= 50)
+        ),
+        conditionalPanel(
+          condition = "input.number == 3",
+          sliderInput("n_1","Select Radius", min=25, max = 700, step = 25, value= 50),
+          sliderInput("n_2","Select Radius", min=25, max = 700, step = 25, value= 50),
+          sliderInput("n_3","Select Radius", min=25, max = 700, step = 25, value= 50)
+        )
+      ),
+      #Creating MainPanel with Tabsets
+      mainPanel(
+        uiOutput("Logo", align="right"),
+        #Creating Tabsets 
+        tabsetPanel(
+          tabPanel("Map",leafletOutput("map") ),
+
+          #display renderPlot
+          tabPanel("Barplot",plotOutput("barplot"))
+          #display logo
+        )
+      )
+    )
 
 )
 
@@ -71,9 +101,14 @@ server <- function(input, output) {
         # }
         # test
       })
+      
+    observeEvent(input$reset_input, {
+        updateSliderInput("n_1", value= 0)
+        updateSliderInput("n_2", value= 0)
+        updateSliderInput("n_3", value= 0)
+    })
+    
      
-    
-    
     #map output 
     output$map <- renderLeaflet({
       #golden marker for hamburg
@@ -105,7 +140,8 @@ server <- function(input, output) {
         addMarkers(lng=9.993682, lat=53.551085, icon=hamburg_marker)
         
         #Adds Radius/ Circle arround Hamburg to the map
-        rad <- as.integer(input$value)
+        rad <- as.integer(c(input$n_1,input$n_2,input$n_3))*1000
+        #rad <- as.integer(input$value)
         rad_frame <- data.frame(rad)
         #Color platte for coloring circles with different radius
         #https://rstudio.github.io/leaflet/colors.html
