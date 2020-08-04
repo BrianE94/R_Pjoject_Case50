@@ -15,6 +15,9 @@ This is an R Markdown document. Markdown is a simple formatting syntax for autho
 
 When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
 
+# Introduction
+
+The intention of this project is to find the faulty vehicles, which are of the type "Type11" and "Type12". A diesel engine "K1DI1" has been installed on these vehicles. The defective vehicles were produced from 1 March 2008 to 11 March 2012.  The recall action will start where the first diesel bans come into force. As starting point the Hamburg area is chosen, because there the first bans will be introduced. 
 
 # Packages
 Install required packages
@@ -30,7 +33,9 @@ install_load("readr", "tidyverse", "stringr", "readxl","ggplot2", "plotly","lubr
 
 
 # Import Data
-Fist the necessary documents have to be imported in the R Markdown file.
+
+## Choice of relevant data
+The task is to find all relevant type 11 and type 12 vehicles from OEM1 that were produced during the problematic period. In addition, the suitable engine "K1DI1" must find.
 ```{r}
 # data_bestandteile_oem1_typ11/12, data_fahrzeug_OEM1_typ11/12, data_Komponente_K1DI1
 
