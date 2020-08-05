@@ -32,7 +32,7 @@ ui <- fluidPage(
         @import url('https://fonts.googleapis.com/css2?family=Anton&display=swap');
         
         h1 {
-          font-family: 'Lobster', cursive;
+          font-family: 'Verdana', cursive;
           font-weight: 500;
           line-height: 1.1;
           color: #ff0000;
