@@ -331,6 +331,29 @@ server <- function(input, output, session) {
       final_rad_all_plot_advanced
     })
     
+    #factor for every single radius 
+    get_plot_dataset_advanced_factor <- reactive({
+      inputvector_sorted <- as.integer(inputvector())
+      names(inputvector_sorted)=c(1:6)
+      inputvector_sorted <- sort(inputvector_sorted,decreasing = FALSE)
+      inputvector_sorted[inputvector_sorted==0]<-NA
+      inputvector_sorted<-inputvector_sorted[!is.na(inputvector_sorted)]
+      final_rad_all_plot_advanced_factor <- get_basic_dataset()
+      #Kleinster Radiusbis Größter 
+      #1
+      #final_rad_all_plot_advanced_factor$Radius1 <- cut(final_rad_all_plot_advanced_factor$dist, c(0,inputvector_sorted[1]),labels=TRUE)
+      
+      a<-as.numeric(final_rad_all_plot_advanced_factor$dist<=inputvector_sorted[1])
+      final_rad_all_plot_advanced_factor$Radius1 <- a
+      #2
+      if(input$number == 2|3|4|5|6){
+        b <- as.numeric(final_rad_all_plot_advanced_factor$dist<=inputvector_sorted[2])
+        final_rad_all_plot_advanced_factor$Radius2 <- b
+      }
+      final_rad_all_plot_advanced_factor
+    })
+    
+    observe(print(get_plot_dataset_advanced_factor()))
     
     #prepare dataset for plotting 
     get_plot_dataset <- reactive({
@@ -349,9 +372,12 @@ server <- function(input, output, session) {
     #observe(print(get_plot_dataset()))
     
     output$barplot <- renderPlot({
-      df <- get_plot_dataset_advanced()
-      ggplot(df)+
-        geom_bar(aes(Radius, fill = Bundesland))
+      df1 <- get_plot_dataset_advanced()
+      df2 <- get_plot_dataset_advanced_factor()
+      ggplot()+
+        geom_bar(data=df1,aes(Radius, fill = Bundesland))
+        #geom_histogram(data = df2,aes(Radius1, fill=Bundesland),stat="count")
+        #geom_histogram(data = df2,aes(Radius2, fill=Bundesland),stat="count")
     })
     
     # output$barplot <- renderPlot({
