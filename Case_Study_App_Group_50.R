@@ -50,45 +50,44 @@ ui <- fluidPage(
         #selectInput("value", "Select Radius in km:", c(seq(25000, 700000, by=25000)), selected=50000, multiple=TRUE, width = 150), 
         #multiple choice number of radius
         selectInput("number", "select number of radius to compare", c(1:6), width= 200),
-        actionButton("reset_input", "Reset inputs"),
         conditionalPanel(
           condition = "input.number == 1",
-          sliderInput("n_1","Select Radius", min=25, max = 700, step = 25, value= 50000)
+          sliderInput("n_1","Select Radius", min=25, max = 700, step = 25, value= 50)
         ), 
         conditionalPanel(
           condition = "input.number == 2",
           sliderInput("n_1_2","Select Radius", min=25, max = 700, step = 25, value= 50),
-          sliderInput("n_2","Select Radius", min=0, max = 700, step = 25, value= 0)
+          sliderInput("n_2","Select Radius", min=0, max = 700, step = 25, value=100)
         ),
         conditionalPanel(
           condition = "input.number == 3",
           sliderInput("n_1_3","Select Radius", min=25, max = 700, step = 25, value= 50),
-          sliderInput("n_2_3","Select Radius", min=25, max = 700, step = 25, value= 50),
-          sliderInput("n_3","Select Radius", min=0, max = 700, step = 25, value= 0)
+          sliderInput("n_2_3","Select Radius", min=25, max = 700, step = 25, value= 100),
+          sliderInput("n_3","Select Radius", min=0, max = 700, step = 25, value= 200)
         ),
         conditionalPanel(
           condition = "input.number == 4",
           sliderInput("n_1_4","Select Radius", min=25, max = 700, step = 25, value= 50),
-          sliderInput("n_2_4","Select Radius", min=25, max = 700, step = 25, value= 50),
-          sliderInput("n_3_4","Select Radius", min=0, max = 700, step = 25, value= 50),
-          sliderInput("n_4","Select Radius", min=0, max = 700, step = 25, value= 0)
+          sliderInput("n_2_4","Select Radius", min=25, max = 700, step = 25, value= 100),
+          sliderInput("n_3_4","Select Radius", min=0, max = 700, step = 25, value= 200),
+          sliderInput("n_4","Select Radius", min=0, max = 700, step = 25, value= 300)
         ),
         conditionalPanel(
           condition = "input.number == 5",
           sliderInput("n_1_5","Select Radius", min=25, max = 700, step = 25, value= 50),
-          sliderInput("n_2_5","Select Radius", min=25, max = 700, step = 25, value= 50),
-          sliderInput("n_3_5","Select Radius", min=0, max = 700, step = 25, value= 50),
-          sliderInput("n_4_5","Select Radius", min=0, max = 700, step = 25, value= 50),
-          sliderInput("n_5","Select Radius", min=0, max = 700, step = 25, value= 0)
+          sliderInput("n_2_5","Select Radius", min=25, max = 700, step = 25, value= 100),
+          sliderInput("n_3_5","Select Radius", min=0, max = 700, step = 25, value= 200),
+          sliderInput("n_4_5","Select Radius", min=0, max = 700, step = 25, value= 300),
+          sliderInput("n_5","Select Radius", min=0, max = 700, step = 25, value= 400)
         ),
         conditionalPanel(
           condition = "input.number == 6",
           sliderInput("n_1_6","Select Radius", min=25, max = 700, step = 25, value= 50),
-          sliderInput("n_2_6","Select Radius", min=25, max = 700, step = 25, value= 50),
-          sliderInput("n_3_6","Select Radius", min=0, max = 700, step = 25, value= 50),
-          sliderInput("n_4_6","Select Radius", min=0, max = 700, step = 25, value= 50),
-          sliderInput("n_5_6","Select Radius", min=0, max = 700, step = 25, value= 50),
-          sliderInput("n_6","Select Radius", min=0, max = 700, step = 25, value= 0)
+          sliderInput("n_2_6","Select Radius", min=25, max = 700, step = 25, value= 100),
+          sliderInput("n_3_6","Select Radius", min=0, max = 700, step = 25, value= 200),
+          sliderInput("n_4_6","Select Radius", min=0, max = 700, step = 25, value= 300),
+          sliderInput("n_5_6","Select Radius", min=0, max = 700, step = 25, value= 400),
+          sliderInput("n_6","Select Radius", min=0, max = 700, step = 25, value= 500)
         )
       ),
       #Creating MainPanel with Tabsets
@@ -119,7 +118,12 @@ server <- function(input, output, session) {
     })
     
     
-      
+    #catch default values 
+    #https://stackoverflow.com/questions/33662033/shiny-how-to-make-reactive-value-initialize-with-default-value#38565508
+    defaults <- isolate(as.integer(c(input$n_1,input$n_2,input$n_3,input$n_4,input$n_5,input$n_6)))
+    
+    
+    
     observe({
       if (input$number==1){
         updateSliderInput(session,"n_2", value= 0)
@@ -131,6 +135,7 @@ server <- function(input, output, session) {
       if(input$number==2){  
         val1 <- input$n_1_2
         updateSliderInput(session,"n_1", value= val1)
+        updateSliderInput(session,"n_2", value= defaults[2])
         updateSliderInput(session,"n_3", value= 0)
         updateSliderInput(session,"n_4", value= 0)
         updateSliderInput(session,"n_5", value= 0)
@@ -141,6 +146,7 @@ server <- function(input, output, session) {
         val2 <- input$n_2_3
         updateSliderInput(session,"n_1", value= val1)
         updateSliderInput(session,"n_2", value= val2)
+        updateSliderInput(session,"n_3", value= defaults[3])
         updateSliderInput(session,"n_4", value= 0)
         updateSliderInput(session,"n_5", value= 0)
         updateSliderInput(session,"n_6", value= 0)
@@ -152,6 +158,7 @@ server <- function(input, output, session) {
         updateSliderInput(session,"n_1", value= val1)
         updateSliderInput(session,"n_2", value= val2)
         updateSliderInput(session,"n_3", value= val3)
+        updateSliderInput(session,"n_4", value= defaults[4])
         updateSliderInput(session,"n_5", value= 0)
         updateSliderInput(session,"n_6", value= 0)
       }
@@ -164,6 +171,7 @@ server <- function(input, output, session) {
         updateSliderInput(session,"n_2", value= val2)
         updateSliderInput(session,"n_3", value= val3)
         updateSliderInput(session,"n_4", value= val4)
+        updateSliderInput(session,"n_5", value= defaults[5])
         updateSliderInput(session,"n_6", value= 0)
       }
       if(input$number==6){
@@ -177,6 +185,7 @@ server <- function(input, output, session) {
         updateSliderInput(session,"n_3", value= val3)
         updateSliderInput(session,"n_4", value= val4)
         updateSliderInput(session,"n_5", value= val5)
+        updateSliderInput(session,"n_6", value= defaults[6])
       }
     })
 
@@ -301,6 +310,28 @@ server <- function(input, output, session) {
     })
     
     #barplot output
+    
+    #for advanced barplotting 
+    get_plot_dataset_advanced <- reactive({
+      final_rad_all_plot_advanced <- get_basic_dataset()
+      inputvector_sorted <- as.integer(inputvector())
+      names(inputvector_sorted)=c(1:6)
+      inputvector_sorted <- sort(inputvector_sorted,decreasing = FALSE)
+      inputvector_sorted[inputvector_sorted==0]<-NA
+      inputvector_sorted<-inputvector_sorted[!is.na(inputvector_sorted)]
+      #Problem wenn zwei oder mehrere Radien komplett gleich sind-> custom error message
+      #https://www.sitepoint.com/shiny-and-r-how-to-add-themes-and-customize-error-messages/
+      a <- if(TRUE %in% duplicated(inputvector_sorted)){FALSE}else{TRUE}
+      validate(
+       need(a !=FALSE, 
+        "All set Radius must be set unique, please change your input"
+         )
+      )
+      final_rad_all_plot_advanced$Radius <- cut(final_rad_all_plot_advanced$dist, c(0,inputvector_sorted),labels=names(inputvector_sorted))
+      final_rad_all_plot_advanced
+    })
+    
+    
     #prepare dataset for plotting 
     get_plot_dataset <- reactive({
       final_rad_all_plot <- get_dataset_all()%>%
@@ -315,13 +346,19 @@ server <- function(input, output, session) {
       final_rad_all_plot
     })
     
-    observe(print(get_plot_dataset()))
+    #observe(print(get_plot_dataset()))
     
     output$barplot <- renderPlot({
-      df <- get_plot_dataset()
+      df <- get_plot_dataset_advanced()
       ggplot(df)+
-        geom_col(aes(Namen,Anzahl, fill=Anzahl))
+        geom_bar(aes(Radius, fill = Bundesland))
     })
+    
+    # output$barplot <- renderPlot({
+    #   df <- get_plot_dataset()
+    #   ggplot(df)+
+    #     geom_col(aes(Namen,Anzahl, fill=Anzahl))
+    # })
 }
 
 # Run the application 
