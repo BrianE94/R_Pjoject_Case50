@@ -14,7 +14,7 @@ if(!require("install.load")){
 }
 library(install.load)
 
-install_load("shiny", "leaflet", "htmltools", "highcharter","ggplot2", "maps","dplyr","tidyverse","rvest","raster","sf","rgeos","plotly","jpeg","png","RColorBrewer","DT")
+install_load("shiny", "leaflet", "htmltools", "highcharter","ggplot2", "maps","dplyr","tidyverse","rvest","raster","sf","rgeos","plotly","jpeg","png","RColorBrewer","DT","janitor")
 
 #load saved dataframe from Case_Study_Group_50.Rmd
 load(file="final_data_Group_50.Rda")
@@ -53,7 +53,7 @@ ui <- fluidPage(
         actionButton("reset_input", "Reset inputs"),
         conditionalPanel(
           condition = "input.number == 1",
-          sliderInput("n_1","Select Radius", min=25, max = 700, step = 25, value= 0)
+          sliderInput("n_1","Select Radius", min=25, max = 700, step = 25, value= 50000)
         ), 
         conditionalPanel(
           condition = "input.number == 2",
@@ -230,56 +230,97 @@ server <- function(input, output, session) {
         
     })
     
-    #Create dataset with number of cars for selected radius
-    # r1 --> count(dist)
     
-    # Get Radi for Barplot
-    #barplot output
-    output$barplot <- renderPlot({
-      ggplot(distanz())+
-        geom_histogram(aes(Bundesland), stat="count")
+    #Prepare Dataset due to max radius, only keep necessary info 
+    get_basic_dataset <- reactive({
+      basic_rad <- distanz()%>%
+        select(Bundesland, dist)
+      basic_rad
     })
-    #Prepare Dataset 
-    get_dataset <- function(){  
-      final_rad <- distanz()%>%
-          select(Bundesland, dist)%>%
-          group_by(Bundesland)%>%
-          summarise(totalBundesland = n())%>%
-          arrange(desc(totalBundesland))
-    }
     
-    #filter_dataset <- reactive(x,{
-     # get_dataset() %>%
-      #  filter(dist <= x)
-    #})
+    
+    inputvector <- reactive ({
+      input_vector <- as.numeric(c(input$n_1,input$n_2,input$n_3,input$n_4,input$n_5,input$n_6))*1000
+      input_vector
+    })
     
     #add observations for all selected radius
-    
     get_dataset_all <- reactive({
-      set1<- get_dataset()
-      val1_1=input$n_1
-      n_1_filtered <- filter(set1, dist <= val1_1)
-      #n_2_filtered <- filter(get_dataset(), dist <= input$n_2)
-      #n_3_filtered <- filter(get_dataset(), dist <= input$n_3)
-      #n_4_filtered <- filter(get_dataset(), dist <= input$n_4)
-      #n_5_filtered <- filter(get_dataset(), dist <= input$n_5)
-      #n_6_filtered <- filter(get_dataset(), dist <= input$n_6)
-      #a<-get_dataset()%>%
-        #mutate(rad1 = map_lgl(dist,(dist-input$n_1>0)))
-        #mutate(rad1 = dist - input$n_1 > 0)
-      #a <-map_dfc(c(input$n_1,input$n_2,input$n_3,input$n_4,input$n_5,input$n_6)*1000, filter_dataset())
-      #print(head(a))
-      get_final_dataset<-cbind(get_dataset(),n_1_filtered)
-      get_final_dataset
+      n_1_filtered <- filter(get_basic_dataset(), dist <= inputvector()[1])%>%
+        group_by(Bundesland)%>%
+        summarise(Radius_1 = n())%>%
+        arrange(desc(Radius_1))%>%
+        ungroup()
+      n_2_filtered <- filter(get_basic_dataset(), dist <= inputvector()[2])%>%
+        group_by(Bundesland)%>%
+        summarise(Radius_2 = n())%>%
+        arrange(desc(Radius_2))%>%
+        ungroup()
+      n_3_filtered <- filter(get_basic_dataset(), dist <= inputvector()[3])%>%
+        group_by(Bundesland)%>%
+        summarise(Radius_3 = n())%>%
+        arrange(desc(Radius_3))%>%
+        ungroup()
+      n_4_filtered <- filter(get_basic_dataset(), dist <= inputvector()[4])%>%
+        group_by(Bundesland)%>%
+        summarise(Radius_4 = n())%>%
+        arrange(desc(Radius_4))%>%
+        ungroup()
+      n_5_filtered <- filter(get_basic_dataset(), dist <= inputvector()[5])%>%
+        group_by(Bundesland)%>%
+        summarise(Radius_5 = n())%>%
+        arrange(desc(Radius_5))%>%
+        ungroup()
+      n_6_filtered <- filter(get_basic_dataset(), dist <= inputvector()[6])%>%
+        group_by(Bundesland)%>%
+        summarise(Radius_6 = n())%>%
+        arrange(desc(Radius_6))%>%
+        ungroup()
+      final_rad_all <- list(n_1_filtered,n_2_filtered,n_3_filtered,n_4_filtered,n_5_filtered,n_6_filtered)%>%
+        #https://stackoverflow.com/questions/8091303/simultaneously-merge-multiple-data-frames-in-a-list#34393416
+        reduce(full_join, by="Bundesland")%>%
+        #https://rdrr.io/cran/janitor/man/remove_empty.html
+        remove_empty("cols")
+        #fill with "0's"
+        final_rad_all[is.na(final_rad_all)]<-0
+        #https://stackoverflow.com/questions/16363922/convert-a-vector-into-a-list-each-element-in-the-vector-as-an-element-in-the-li
+        sum_1 <- list(Bundesland="Summe")
+        sum_2 <- as.list(colSums(final_rad_all[-1]))
+        sums <- c(sum_1,sum_2)
+        #https://stackoverflow.com/questions/28467068/how-can-a-add-a-row-to-a-data-frame-in-r
+        final_rad_all[nrow(final_rad_all)+1,]=sums
+        #https://stackoverflow.com/questions/11036989/replace-all-0-values-to-na
+        final_rad_all[final_rad_all==0]<- NA
+      final_rad_all
     })
-    
-    #get_dataset_all()
-    #filter_dataset(500000)
-    
+
     output$datatable_rad <- renderDataTable({
       datatable(
-        get_dataset()
+        get_dataset_all()
       )
+    })
+    
+    #barplot output
+    #prepare dataset for plotting 
+    get_plot_dataset <- reactive({
+      final_rad_all_plot <- get_dataset_all()%>%
+        filter(Bundesland == "Summe")
+      name_cols <- colnames(final_rad_all_plot[-1])
+      print(name_cols)
+      #https://stackoverflow.com/questions/6778908/transpose-a-data-frame
+      final_rad_all_plot <- as.data.frame(t(final_rad_all_plot[,-1]))
+      colnames(final_rad_all_plot)<-"Anzahl"
+      #mutate(final_rad_all_plot, Namen=name_cols)
+      final_rad_all_plot$Namen <- name_cols
+      final_rad_all_plot
+    })
+    
+    observe(print(get_plot_dataset()))
+    
+    output$barplot <- renderPlot({
+      df <- get_plot_dataset()
+      ggplot(df)+
+        geom_col(aes(Namen,Anzahl, fill=Anzahl))
     })
 }
 
