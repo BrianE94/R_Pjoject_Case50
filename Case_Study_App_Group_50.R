@@ -100,8 +100,7 @@ ui <- fluidPage(
         #Creating Tabsets 
         tabsetPanel(
           tabPanel("Map",leafletOutput("map") ),
-          tabPanel("Affected Cities",leafletOutput("map2") ),
-
+          
           #display renderPlot
           tabPanel("Barplot",plotOutput("barplot")),
           #display logo
@@ -131,6 +130,11 @@ server <- function(input, output, session) {
     
     observe({
       if (input$number==1){
+        updateSliderInput(session,"n_1_2", value= input$n_1)
+        updateSliderInput(session,"n_1_3", value= input$n_1)
+        updateSliderInput(session,"n_1_4", value= input$n_1)
+        updateSliderInput(session,"n_1_5", value= input$n_1)
+        updateSliderInput(session,"n_1_6", value= input$n_1)
         updateSliderInput(session,"n_2", value= 0)
         updateSliderInput(session,"n_3", value= 0)
         updateSliderInput(session,"n_4", value= 0)
@@ -139,8 +143,18 @@ server <- function(input, output, session) {
       }
       if(input$number==2){  
         val1 <- input$n_1_2
+        updateSliderInput(session,"n_1_3", value= val1)
+        updateSliderInput(session,"n_1_4", value= val1)
+        updateSliderInput(session,"n_1_5", value= val1)
+        updateSliderInput(session,"n_1_6", value= val1)
+        #uhguzhd
+        updateSliderInput(session,"n_2_3", value= input$n_2)
+        updateSliderInput(session,"n_2_4", value= input$n_2)
+        updateSliderInput(session,"n_2_5", value= input$n_2)
+        updateSliderInput(session,"n_2_6", value= input$n_2)
+        #uzgfuizwfv
         updateSliderInput(session,"n_1", value= val1)
-        updateSliderInput(session,"n_2", value= defaults[2])
+        #updateSliderInput(session,"n_2", value= defaults[2])
         updateSliderInput(session,"n_3", value= 0)
         updateSliderInput(session,"n_4", value= 0)
         updateSliderInput(session,"n_5", value= 0)
@@ -149,9 +163,22 @@ server <- function(input, output, session) {
       if(input$number==3){
         val1 <- input$n_1_3
         val2 <- input$n_2_3
+        updateSliderInput(session,"n_1_4", value= val1)
+        updateSliderInput(session,"n_1_5", value= val1)
+        updateSliderInput(session,"n_1_6", value= val1)
+        #iuhjgviudf
+        updateSliderInput(session,"n_2_4", value= val2)
+        updateSliderInput(session,"n_2_5", value= val2)
+        updateSliderInput(session,"n_2_6", value= val2)
+        #guzuugi
+        updateSliderInput(session,"n_3_4", value= input$n_3)
+        updateSliderInput(session,"n_3_5", value= input$n_3)
+        updateSliderInput(session,"n_3_6", value= input$n_3)
+        
+        #giuciuebhvcis
         updateSliderInput(session,"n_1", value= val1)
         updateSliderInput(session,"n_2", value= val2)
-        updateSliderInput(session,"n_3", value= defaults[3])
+        #updateSliderInput(session,"n_3", value= defaults[3])
         updateSliderInput(session,"n_4", value= 0)
         updateSliderInput(session,"n_5", value= 0)
         updateSliderInput(session,"n_6", value= 0)
@@ -160,10 +187,26 @@ server <- function(input, output, session) {
         val1 <- input$n_1_4
         val2 <- input$n_2_4
         val3 <- input$n_3_4
+        
+        updateSliderInput(session,"n_1_5", value= val1)
+        updateSliderInput(session,"n_1_6", value= val1)
+        #iuhjgviudf
+        
+        updateSliderInput(session,"n_2_5", value= val2)
+        updateSliderInput(session,"n_2_6", value= val2)
+        #giuui
+        updateSliderInput(session,"n_3_5", value= val3)
+        updateSliderInput(session,"n_3_6", value= val3)
+        #guzuugi
+        
+        updateSliderInput(session,"n_4_5", value= input$n_4)
+        updateSliderInput(session,"n_4_6", value= input$n_4)
+        
+        #giuciuebhvcis
         updateSliderInput(session,"n_1", value= val1)
         updateSliderInput(session,"n_2", value= val2)
         updateSliderInput(session,"n_3", value= val3)
-        updateSliderInput(session,"n_4", value= defaults[4])
+        #updateSliderInput(session,"n_4", value= defaults[4])
         updateSliderInput(session,"n_5", value= 0)
         updateSliderInput(session,"n_6", value= 0)
       }
@@ -172,11 +215,29 @@ server <- function(input, output, session) {
         val2 <- input$n_2_5
         val3 <- input$n_3_5
         val4 <- input$n_4_5
+        
+        
+        updateSliderInput(session,"n_1_6", value= val1)
+        #iuhjgviudf
+        
+        
+        updateSliderInput(session,"n_2_6", value= val2)
+        #giuui
+        
+        updateSliderInput(session,"n_3_6", value= val3)
+        
+        updateSliderInput(session,"n_4_6", value= val4)
+        #guzuugi
+        
+        
+        updateSliderInput(session,"n_5_6", value= input$n_5)
+        
+        
         updateSliderInput(session,"n_1", value= val1)
         updateSliderInput(session,"n_2", value= val2)
         updateSliderInput(session,"n_3", value= val3)
         updateSliderInput(session,"n_4", value= val4)
-        updateSliderInput(session,"n_5", value= defaults[5])
+        #updateSliderInput(session,"n_5", value= defaults[5])
         updateSliderInput(session,"n_6", value= 0)
       }
       if(input$number==6){
@@ -190,7 +251,7 @@ server <- function(input, output, session) {
         updateSliderInput(session,"n_3", value= val3)
         updateSliderInput(session,"n_4", value= val4)
         updateSliderInput(session,"n_5", value= val5)
-        updateSliderInput(session,"n_6", value= defaults[6])
+        #updateSliderInput(session,"n_6", value= defaults[6])
       }
     })
 
@@ -201,7 +262,16 @@ server <- function(input, output, session) {
       test%>%
         filter(test$dist <= as.numeric(max(as.integer(c(input$n_1,input$n_2,input$n_3,input$n_4,input$n_5,input$n_6))*1000)))
     })
-     
+    
+    #prepare dataset for cities of interest 
+    anzahl <- reactive({
+      cities_amount <- test%>%
+        count(Ort)%>%
+        filter(n>=input$anzahl)%>%
+        left_join(test, by="Ort")
+    })
+    
+
     #map output 
     output$map <- renderLeaflet({
       #golden marker for hamburg
@@ -212,14 +282,23 @@ server <- function(input, output, session) {
         iconAnchorX = 25/2, iconAnchorY = 41
       )
       
+      auto_marker <- makeIcon(
+        iconUrl = "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png",
+        iconWidth = 15, iconHeight = 25,
+        iconAnchorX = 15/2, iconAnchorY = 25
+      )
+      
       #draw the map and add markers
       # See: https://stackoverflow.com/questions/40861908/shiny-r-implement-slider-input
       distanz <- distanz()
         my_map <- leaflet(distanz)%>%
+        
         addTiles()%>%
+        #Layer 1 Cluster Anzeige 
         # https://rstudio.github.io/leaflet/markers.html  
         addMarkers(lng=~Laengengrad, 
-                   lat=~Breitengrad,group="Cluster Marker", 
+                   lat=~Breitengrad,
+                   group="Clustered Markers", 
                    clusterOptions = markerClusterOptions(),
                    label=~paste("ID_Fahrzeug: ",
                                 as.character(ID_Fahrzeug),
@@ -242,65 +321,19 @@ server <- function(input, output, session) {
         pal <- colorFactor("Dark2", rad_frame$index)
         my_map <- addCircles(map=my_map, data=rad_frame, lng=9.993682, lat=53.551085,radius = ~rad, fillOpacity = 0.02, color = ~pal(rad_frame$index), fillColor = ~pal(rad_frame$index))
         
+        #Layer 2 Cities of interest 
+        my_map <- addMarkers(map=my_map, data = anzahl (),
+                  lng=~Laengengrad, 
+                  lat=~Breitengrad,
+                  group="Cities of interest",
+                  icon = auto_marker
+                   )
+        #Add map controls for different groups/Layers 
+        my_map <- addLayersControl(map=my_map, overlayGroups = c("Clustered Markers","Cities of interest"),options = layersControlOptions(collapsed = FALSE))
+        
     })
     
-    # Find cities/communities with certain amount of affected vehicles (4.d)
-    
-    output$map2 <- renderLeaflet({
-      
-      anzahl <- reactive({
-        test%>%
-          count(Ort)%>%
-          filter(n>=input$anzahl)
-      })
-      
-      anzahl_faelle <- anzahl()
-      
-      anzahl_faelle <- anzahl_faelle %>%
-        left_join(test, by = "Ort") %>%
-        group_by(Ort)
-      
-      auto_marker <- makeIcon(
-        iconUrl = "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png",
-        iconWidth = 15, iconHeight = 25,
-        iconAnchorX = 15/2, iconAnchorY = 25
-      )
-      
-      #draw the map and add markers
-      # See: https://stackoverflow.com/questions/40861908/shiny-r-implement-slider-input
-      my_map2 <- leaflet(anzahl_faelle)%>%
-        addTiles()%>%
-        # https://rstudio.github.io/leaflet/markers.html  
-        addMarkers(lng=~Laengengrad, 
-                   lat=~Breitengrad,group="Cluster Marker",
-                   icon = auto_marker,
-                   # Making small clusters: https://github.com/Leaflet/Leaflet.markercluster#other-options
-                   #clusterOptions = markerClusterOptions(spiderfyOnMaxZoom = FALSE, maxClusterRadius=1),
-                   #label=~paste("ID_Fahrzeug: ",
-                   #as.character(ID_Fahrzeug),
-                   #"\n",
-                   #"Produktionsdatum: ",
-                   #(Produktionsdatum),
-                   #"\n",
-                   #"Dist",
-                   #(dist))
-        )#%>%
-      #addMarkers(lng=~Laengengrad, 
-      #lat=~Breitengrad,group="Cluster Marker",
-      # Making small clusters: https://github.com/Leaflet/Leaflet.markercluster#other-options
-      #clusterOptions = markerClusterOptions(spiderfyOnMaxZoom = FALSE, maxClusterRadius=1),
-      #label=~paste("ID_Fahrzeug: ",
-      #as.character(ID_Fahrzeug),
-      #"\n",
-      #"Produktionsdatum: ",
-      #(Produktionsdatum),
-      #"\n",
-      #"Dist",
-      #(dist))
-      #)
-    })
-    
-    
+
     #Prepare Dataset due to max radius, only keep necessary info 
     get_basic_dataset <- reactive({
       basic_rad <- distanz()%>%
@@ -402,6 +435,10 @@ server <- function(input, output, session) {
     })
     
     #factor for every single radius 
+    # Radiuss 1 immer ganz links Radius 6 immer ganz rechts --> sorting 
+    # akkumlierte ansicht 
+    # filled by bundesland 
+    # 
     get_plot_dataset_advanced_factor <- reactive({
       inputvector_sorted <- as.integer(inputvector())
       names(inputvector_sorted)=c(1:6)
@@ -412,14 +449,21 @@ server <- function(input, output, session) {
       #Kleinster Radiusbis Größter 
       #1
       #final_rad_all_plot_advanced_factor$Radius1 <- cut(final_rad_all_plot_advanced_factor$dist, c(0,inputvector_sorted[1]),labels=TRUE)
-      
-      a<-as.numeric(final_rad_all_plot_advanced_factor$dist<=inputvector_sorted[1])
+      #Radius 1
+      a<-final_rad_all_plot_advanced_factor$dist<=inputvector_sorted[1]
       final_rad_all_plot_advanced_factor$Radius1 <- a
-      #2
-      if(input$number == 2|3|4|5|6){
-        b <- as.numeric(final_rad_all_plot_advanced_factor$dist<=inputvector_sorted[2])
-        final_rad_all_plot_advanced_factor$Radius2 <- b
-      }
+      #
+      final_rad_all_plot_advanced_factor <- final_rad_all_plot_advanced_factor%>%
+        group_by(Radius1, Bundesland)%>%
+        #mutate(count_rad1 = sum(Radius1))
+        summarise(count_rad1 = n())%>%
+        ungroup()
+      final_rad_all_plot_advanced_factor$count_rad1 <- final_rad_all_plot_advanced_factor$count_rad1 * final_rad_all_plot_advanced_factor$Radius1
+      # #2
+      # if(input$number == 2|3|4|5|6){
+      #   b <- as.numeric(final_rad_all_plot_advanced_factor$dist<=inputvector_sorted[2])
+      #   final_rad_all_plot_advanced_factor$Radius2 <- b
+      # }
       final_rad_all_plot_advanced_factor
     })
     
@@ -447,7 +491,8 @@ server <- function(input, output, session) {
       ggplot()+
         geom_bar(data=df1,aes(Radius, fill = Bundesland))
         #geom_histogram(data = df2,aes(Radius1, fill=Bundesland),stat="count")
-        #geom_histogram(data = df2,aes(Radius2, fill=Bundesland),stat="count")
+        #geom_histogram(data = df2,aes(Radius2, fill=Bundesland),stat="count")+ 
+        
     })
     
     # output$barplot <- renderPlot({
