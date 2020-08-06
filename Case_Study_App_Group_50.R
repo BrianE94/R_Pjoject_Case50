@@ -35,13 +35,15 @@ ui <- fluidPage(
           font-family: 'Verdana', cursive;
           font-weight: 500;
           line-height: 1.1;
-          color: #ff0000;
+          color: #7cfc00;
         }
   
       "))
     ),
     # Application title
     headerPanel("Placeholder"),
+    # Adding a theme
+    theme = shinythemes::shinytheme('sandstone'),
     #Creating a sidebarLayout 
     sidebarLayout(
       #Creating Sidebar
@@ -88,7 +90,9 @@ ui <- fluidPage(
           sliderInput("n_4_6","Select Radius", min=0, max = 700, step = 25, value= 300),
           sliderInput("n_5_6","Select Radius", min=0, max = 700, step = 25, value= 400),
           sliderInput("n_6","Select Radius", min=0, max = 700, step = 25, value= 500)
-        )
+        ),
+        # Add user input to highlight cities and communities with a certain amount of affected vehicles (4.d)
+        sliderInput("anzahl", "Select the critical number of affected registered vehicles. Cities that have this amount of affected cars (or more) are highlighted in the tab 'Cities affected'", min = 20, max = 100, value = 50)
       ),
       #Creating MainPanel with Tabsets
       mainPanel(
@@ -96,6 +100,7 @@ ui <- fluidPage(
         #Creating Tabsets 
         tabsetPanel(
           tabPanel("Map",leafletOutput("map") ),
+          tabPanel("Affected Cities",leafletOutput("map2") ),
 
           #display renderPlot
           tabPanel("Barplot",plotOutput("barplot")),
@@ -239,6 +244,62 @@ server <- function(input, output, session) {
         
     })
     
+    # Find cities/communities with certain amount of affected vehicles (4.d)
+    
+    output$map2 <- renderLeaflet({
+      
+      anzahl <- reactive({
+        test%>%
+          count(Ort)%>%
+          filter(n>=input$anzahl)
+      })
+      
+      anzahl_faelle <- anzahl()
+      
+      anzahl_faelle <- anzahl_faelle %>%
+        left_join(test, by = "Ort") %>%
+        group_by(Ort)
+      
+      auto_marker <- makeIcon(
+        iconUrl = "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png",
+        iconWidth = 15, iconHeight = 25,
+        iconAnchorX = 15/2, iconAnchorY = 25
+      )
+      
+      #draw the map and add markers
+      # See: https://stackoverflow.com/questions/40861908/shiny-r-implement-slider-input
+      my_map2 <- leaflet(anzahl_faelle)%>%
+        addTiles()%>%
+        # https://rstudio.github.io/leaflet/markers.html  
+        addMarkers(lng=~Laengengrad, 
+                   lat=~Breitengrad,group="Cluster Marker",
+                   icon = auto_marker,
+                   # Making small clusters: https://github.com/Leaflet/Leaflet.markercluster#other-options
+                   #clusterOptions = markerClusterOptions(spiderfyOnMaxZoom = FALSE, maxClusterRadius=1),
+                   #label=~paste("ID_Fahrzeug: ",
+                   #as.character(ID_Fahrzeug),
+                   #"\n",
+                   #"Produktionsdatum: ",
+                   #(Produktionsdatum),
+                   #"\n",
+                   #"Dist",
+                   #(dist))
+        )#%>%
+      #addMarkers(lng=~Laengengrad, 
+      #lat=~Breitengrad,group="Cluster Marker",
+      # Making small clusters: https://github.com/Leaflet/Leaflet.markercluster#other-options
+      #clusterOptions = markerClusterOptions(spiderfyOnMaxZoom = FALSE, maxClusterRadius=1),
+      #label=~paste("ID_Fahrzeug: ",
+      #as.character(ID_Fahrzeug),
+      #"\n",
+      #"Produktionsdatum: ",
+      #(Produktionsdatum),
+      #"\n",
+      #"Dist",
+      #(dist))
+      #)
+    })
+    
     
     #Prepare Dataset due to max radius, only keep necessary info 
     get_basic_dataset <- reactive({
@@ -305,8 +366,17 @@ server <- function(input, output, session) {
 
     output$datatable_rad <- renderDataTable({
       datatable(
-        get_dataset_all()
-      )
+        # Disable pagination: https://shiny.rstudio.com/gallery/datatables-options.html
+        options = list(paging = FALSE),
+        # Disable numbering of the rows: https://stackoverflow.com/questions/55229736/how-to-remove-the-first-column-index-from-data-table-in-r-shiny
+        rownames = FALSE,
+        get_dataset_all())%>%
+        # How to highlight the row "Summe": https://rstudio.github.io/DT/010-style.html
+        formatStyle(
+          'Bundesland',
+          target = 'row',
+          backgroundColor = styleEqual("Summe", 'lawngreen')
+        )
     })
     
     #barplot output
