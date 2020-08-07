@@ -14,7 +14,7 @@ if(!require("install.load")){
 }
 library(install.load)
 
-install_load("shiny", "leaflet", "htmltools", "highcharter","ggplot2", "maps","dplyr","tidyverse","rvest","raster","sf","rgeos","plotly","jpeg","png","RColorBrewer","DT","janitor", "shinythemes")
+install_load("shiny", "leaflet", "htmltools", "highcharter","ggplot2", "maps","dplyr","tidyverse","rvest","raster","sf","rgeos","plotly","jpeg","png","RColorBrewer","DT","janitor", "shinythemes", "shinyWidgets")
 
 #load saved dataframe from Case_Study_Group_50.Rmd
 load(file="final_data_Group_50.Rda")
@@ -35,7 +35,7 @@ ui <- fluidPage(
           font-family: 'Verdana', cursive;
           font-weight: 500;
           line-height: 1.1;
-          color: #7cfc00;
+          color: #698b47;
         }
   
       "))
@@ -44,6 +44,8 @@ ui <- fluidPage(
     headerPanel("Car Recall Action"),
     # Adding a theme
     theme = shinythemes::shinytheme('sandstone'),
+    # How to change the color of slider inputs: https://www.rdocumentation.org/packages/shinyWidgets/versions/0.5.3/topics/setSliderColor
+    setSliderColor(c("#698b47", "#698b47","#698b47","#698b47","#698b47", "#698b47", "#698b47","#698b47","#698b47","#698b47","#698b47", "#698b47","#698b47","#698b47","#698b47","#698b47", "#698b47","#698b47","#698b47","#698b47", "#698b47", "#698b47"), c(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22)),
     #Creating a sidebarLayout 
     sidebarLayout(
       #Creating Sidebar
@@ -410,7 +412,8 @@ server <- function(input, output, session) {
         formatStyle(
           'Bundesland',
           target = 'row',
-          backgroundColor = styleEqual("Summe", 'lawngreen')
+          backgroundColor = styleEqual("Summe", "#698b47"),
+          color = styleEqual("Summe", "white")
         )
     })
     
