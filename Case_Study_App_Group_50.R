@@ -105,7 +105,8 @@ ui <- fluidPage(
           tabPanel("Barplot",plotOutput("barplot")),
           #display logo
           
-          tabPanel("Table", dataTableOutput('datatable_rad'))
+          tabPanel("Table", dataTableOutput('datatable_rad')),
+          tabPanel("Basic Dataset", dataTableOutput('basic_dataset'))
         )
       )
     )
@@ -400,7 +401,8 @@ server <- function(input, output, session) {
     output$datatable_rad <- renderDataTable({
       datatable(
         # Disable pagination: https://shiny.rstudio.com/gallery/datatables-options.html
-        options = list(paging = FALSE),
+        # Disable sorting: https://stackoverflow.com/questions/37848626/suppressing-sorting-in-datatables-in-shiny/37852445
+        options = list(paging = FALSE, ordering = FALSE),
         # Disable numbering of the rows: https://stackoverflow.com/questions/55229736/how-to-remove-the-first-column-index-from-data-table-in-r-shiny
         rownames = FALSE,
         get_dataset_all())%>%
@@ -410,6 +412,13 @@ server <- function(input, output, session) {
           target = 'row',
           backgroundColor = styleEqual("Summe", 'lawngreen')
         )
+    })
+    
+    #Basic Datatable to prove visualisations
+    output$basic_dataset <- renderDataTable({
+      datatable(test %>%
+                  select(Ort, Bundesland, Laengengrad, Breitengrad, dist))
+      
     })
     
     #barplot output
