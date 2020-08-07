@@ -41,7 +41,7 @@ ui <- fluidPage(
       "))
     ),
     # Application title
-    headerPanel("Placeholder"),
+    headerPanel("Car Recall Action"),
     # Adding a theme
     theme = shinythemes::shinytheme('sandstone'),
     #Creating a sidebarLayout 
@@ -92,7 +92,7 @@ ui <- fluidPage(
           sliderInput("n_6","Select Radius", min=0, max = 700, step = 25, value= 500)
         ),
         # Add user input to highlight cities and communities with a certain amount of affected vehicles (4.d)
-        sliderInput("anzahl", "Select the critical number of affected registered vehicles. Cities that have this amount of affected cars (or more) are highlighted in the tab 'Cities affected'", min = 20, max = 100, value = 50)
+        sliderInput("anzahl", "Select a critical number to find all cities and communities with a certain amount of affected registered vehicles", min = 20, max = 300, value = 50)
       ),
       #Creating MainPanel with Tabsets
       mainPanel(
