@@ -2,7 +2,12 @@
 title: "Case_Study_Group_50"
 author: "Long Hong, Vanessa Schwarz, Jonas Rieger, Andre Düding, Brian Eiffert"
 date: "16 7 2020"
-output: html_document
+output: 
+  html_document:
+    theme: paper
+    toc: yes
+  pdf_document:
+    toc: yes
 ---
 
 ```{r setup, include=FALSE}
@@ -35,18 +40,18 @@ install_load("readr", "tidyverse", "stringr", "readxl","ggplot2", "plotly","lubr
 # Import Data
 
 ## Choice of relevant data
-The task is to find all relevant type 11 and type 12 vehicles from OEM1 that were produced during the problematic period. In addition, the suitable engine "K1DI1" must find.
-```{r}
-# data_bestandteile_oem1_typ11/12, data_fahrzeug_OEM1_typ11/12, data_Komponente_K1DI1
+The task is to find all relevant type 11 and type 12 vehicles with an engine "K1DI1" from OEM1 that were produced during the problematic period. Getting the proper types of vehicels of OEM 1 the following files are imported by the "readr" package: "Bestandteile_Fahrzeuge_OEM1_Typ11","Bestandteile_Fahrzeuge_OEM1_Typ12", "Fahrzeuge_OEM1_Typ11" and "Fahrzeuge_OEM1_Typ12". Here it is important to define the column types.In "Bestandteile_Fahrzeuge_OEM1_Typ11", "Bestandteile_Fahrzeuge_OEM1_Typ12" contains the relevant "ID_Motor", where the relavant motor type is located. "Fahrzeuge_OEM1_Typ11" and "Fahrzeuge_OEM1_Typ12" contains the production period. For easier later handling of the datat redundant/unessesary columns werde detected and deleted after the import. 
+```{r import vehicels, warning = FALSE}
+# data_bestandteile_oem1_typ11/12, data_fahrzeug_OEM1_typ11/12
 
-#OEM Typ 11/12
+#Bestabdteile OEM Typ 11/12
 data_bestandteile_oem1_typ11 <- read_csv2("./Data/Fahrzeug/Bestandteile_Fahrzeuge_OEM1_Typ11.csv", col_types = cols(X1=col_integer(),ID_Karosserie=col_character(),ID_Schaltung=col_character(),ID_Sitze=col_character(),ID_Motor=col_character(),ID_Fahrzeug=col_character())) # Import data
 data_bestandteile_oem1_typ11$X1<- NULL # Delete unecessary column
 
 data_bestandteile_oem1_typ12 <- read_csv2("./Data/Fahrzeug/Bestandteile_Fahrzeuge_OEM1_Typ12.csv", col_types = cols(X1=col_integer(),ID_Karosserie=col_character(),ID_Schaltung=col_character(),ID_Sitze=col_character(),ID_Motor=col_character(),ID_Fahrzeug=col_character())) # Import data
 data_bestandteile_oem1_typ12$X1<- NULL # Delete unecessary column
 
-# Fahrzeuf OEM TTyp 11/12 
+# Fahrzeug OEM TTyp 11/12 
 data_fahrzeug_OEM1_Typ11 <- read_csv("./Data/Fahrzeug/Fahrzeuge_OEM1_Typ11.csv", col_types = cols(X1= col_integer(),ID_Fahrzeug=col_character(),Produktionsdatum= col_character(),Herstellnumer= col_integer(), Fehlerhaft=col_skip(), Fehlerhaft_Datum=col_character(), Fehlerhaft_Fahrleistung=col_integer()))# Import data
 
 data_fahrzeug_OEM1_Typ11 <- data_fahrzeug_OEM1_Typ11[,c(-1,-2)]# Delete unecessary column
@@ -64,11 +69,12 @@ data_fahrzeug_OEM1_Typ12$Produktionsdatum <- as.Date(data_fahrzeug_OEM1_Typ12$Pr
 data_fahrzeug_OEM1_Typ12$Fehlerhaft_Datum <- as.Date(data_fahrzeug_OEM1_Typ12$Fehlerhaft_Datum,
                                                      format = "%Y-%m-%d") # Transform col as date
 
-
-
+```
+Besides, it is nessecary to find the location of the vehicel. The "readr" and the "readexcel" package is used to import the data sets. Therefore, the documents "OpenGeoDB_bundesland_plz_ort_de (1)", "Zulassungen_alle_Fahrzeuge" and "Geodaten_Gemeinden_v1.2_2017-08-22_TrR" are imported. For "OpenGeoDB_bundesland_plz_ort_de (1)" cotains the information about the german state, places and postcode. Unfortunately, the data set is miising the place "Seeg", which was added by hand. This place was found by the later joining and evaluating the strucuture. Furthermore place items contains sometimes numbers, which were deleted by the use of the "tm" package.  
+```{r import location,echo = FALSE,warning = FALSE,message=FALSE}
 # Ort und Zulassung
-data_bundesland_plz_ort <- read_excel("./Data/Zulassungen/OpenGeoDB_bundesland_plz_ort_de (1).xls", col_names = c("Bundesland","PLZ","Ort"))%>%
-  add_row(Bundesland="Bayern",PLZ="87637",Ort="Seeg")
+data_bundesland_plz_ort <- read_excel("./Data/Zulassungen/OpenGeoDB_bundesland_plz_ort_de (1).xls", col_names = c("Bundesland","PLZ","Ort"))%>% #import data
+  add_row(Bundesland="Bayern",PLZ="87637",Ort="Seeg")# add data to the data set
 data_bundesland_plz_ort$Ort <- removeNumbers(data_bundesland_plz_ort$Ort)#https://stackoverflow.com/questions/13590139/remove-numbers-from-alphanumeric-characters
 #Problem mit Länge der PLZ bei Transformation zu integer (see "Leading Zeros") bei Sachsen
 #data_bundesland_plz_ort$PLZ <- as.integer(data_bundesland_plz_ort$PLZ)
@@ -91,6 +97,7 @@ data_Geodaten_Gemeinden <- data_Geodaten_Gemeinden[,c(-1,-2)] # Remove unecessar
 ```
 
 # Tidy Data
+# Data manipulation
 Now the data have to be tidy up
 ```{r}
 
@@ -121,7 +128,7 @@ new_data_Zulassung <- data_Zulassung %>%
   mutate(ID_Fahrzeug_Nummer = as.integer64(str_replace_all(ID_Fahrzeug,"-",""))) # Add ID_Fahrzueg as integer column for further calculations
 
 ```
-# Creaing one Data set
+## Creaing one Data set
 ```{r}
 #Summarise datatset bestandteile from oem1 Typ 11/12
 data_bestandteile_OEM1 <- bind_rows(new_data_bestandteile_oem1_typ11, 
