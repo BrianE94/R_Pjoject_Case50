@@ -420,7 +420,10 @@ server <- function(input, output, session) {
     #Basic Datatable to prove visualisations
     output$basic_dataset <- renderDataTable({
       datatable(test %>%
-                  select(Ort, Bundesland, Laengengrad, Breitengrad, dist))
+                  mutate(dist_zu_ham = dist/1000)%>%
+                  select(Ort, Bundesland, Laengengrad, Breitengrad, dist_zu_ham, ID_Fahrzeug, Produktionsdatum, Zulassung)%>%
+                  rename("Distanz zu Hamburg in km" = dist_zu_ham, Längengrad = Laengengrad, "Fahrzeug ID" = ID_Fahrzeug)
+                )
       
     })
     
