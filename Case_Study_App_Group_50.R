@@ -94,7 +94,7 @@ ui <- fluidPage(
           sliderInput("n_6","Select Radius", min=0, max = 700, step = 25, value= 500)
         ),
         # Add user input to highlight cities and communities with a certain amount of affected vehicles (4.d)
-        sliderInput("anzahl", "Select a critical number to find all cities and communities with a certain amount of affected registered vehicles", min = 20, max = 300, value = 50)
+        sliderInput("anzahl", "Select a critical number to find all cities and communities with a certain amount of affected registered vehicles", min = 20, max = 300, value = 250)
       ),
       #Creating MainPanel with Tabsets
       mainPanel(
@@ -117,6 +117,7 @@ ui <- fluidPage(
 
 # Define server logic required to draw a histogram
 server <- function(input, output, session) {
+    
     #image from URL https://stackoverflow.com/questions/45709189/renderimage-from-url-and-clickable
     output$Logo <- renderUI({
         # Return a list containining the filename
@@ -128,9 +129,98 @@ server <- function(input, output, session) {
     #catch default values 
     #https://stackoverflow.com/questions/33662033/shiny-how-to-make-reactive-value-initialize-with-default-value#38565508
     defaults <- isolate(as.integer(c(input$n_1,input$n_2,input$n_3,input$n_4,input$n_5,input$n_6)))
+
+    # Make a reactve Radius
+    distanz <- reactive({
+      test%>%
+        filter(test$dist <= as.numeric(max(as.integer(c(input$n_1,input$n_2,input$n_3,input$n_4,input$n_5,input$n_6))*1000)))
+    })
+    
+    #prepare dataset for cities of interest 
+    #Nur Filter darf reaktiv sein !!!!!!!!!!!!!!!!
+    cities_amount <- test%>%
+      count(Ort)%>%
+      left_join(subset(distinct(test, Ort, .keep_all=TRUE), select=c(Ort, Laengengrad, Breitengrad)),by="Ort")
+    anzahl <- reactive({
+        filter(cities_amount, n>=input$anzahl)
+    })
+    
+    observe(print(anzahl()))
+
+    #map output 
+    output$map <- renderLeaflet({
+      #golden marker for hamburg
+      #sources: https://github.com/pointhi/leaflet-color-markers; https://rstudio.github.io/leaflet/markers.html
+      hamburg_marker <- makeIcon(
+        iconUrl = "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-gold.png",
+        iconWidth = 25, iconHeight = 41,
+        iconAnchorX = 25/2, iconAnchorY = 41
+      )
+      
+      auto_marker <- makeIcon(
+        iconUrl = "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png",
+        iconWidth = 15, iconHeight = 25,
+        iconAnchorX = 15/2, iconAnchorY = 25
+      )
+      
+      #draw the map and add markers
+      # See: https://stackoverflow.com/questions/40861908/shiny-r-implement-slider-input
+      distanz <- distanz()
+        my_map <- leaflet(distanz)%>%
+        
+        addTiles()%>%
+        #Layer 1 Cluster Anzeige 
+        # https://rstudio.github.io/leaflet/markers.html  
+        addMarkers(lng=~Laengengrad, 
+                   lat=~Breitengrad,
+                   group="Clustered Markers", 
+                   clusterOptions = markerClusterOptions(),
+                   label=~paste("ID_Fahrzeug: ",
+                                as.character(ID_Fahrzeug),
+                                "\n",
+                                "Produktionsdatum: ",
+                                (Produktionsdatum),
+                                "\n",
+                                "Dist",
+                                (dist))
+                   )%>%
+        #Adds Radius/ Circle arround Hamburg to the map
+        addMarkers(lng=9.993682, lat=53.551085, icon=hamburg_marker)
+        
+        
+        rad <- as.integer(c(input$n_1,input$n_2,input$n_3,input$n_4,input$n_5,input$n_6))*1000
+        rad_frame <- data.frame(rad, "index"=c(1:6))
+        #Color platte for coloring circles with different radius
+        #https://rstudio.github.io/leaflet/colors.html
+        #https://cfss.uchicago.edu/notes/leaflet/
+        pal <- colorFactor("Dark2", rad_frame$index)
+        my_map <- addCircles(map=my_map, data=rad_frame, lng=9.993682, lat=53.551085,radius = ~rad, fillOpacity = 0.02, color = ~pal(rad_frame$index), fillColor = ~pal(rad_frame$index))
+        
+        #Layer 2 Cities of interest 
+        my_map <- addMarkers(map=my_map, data = anzahl (),
+                  lng=~Laengengrad,
+                  lat=~Breitengrad,
+                  group="Cities of interest",
+                  icon = auto_marker
+                   )
+        #Add map controls for different groups/Layers 
+        my_map <- addLayersControl(map=my_map, overlayGroups = c("Clustered Markers","Cities of interest"),options = layersControlOptions(collapsed = FALSE))
+        # groups_pos <- c("Clustered Markers","Cities of interest")
+        # groups_sel <- input$map_groups
+        # groups_match <- groups_sel %in% groups_pos
+        # groups_hide <- groups_pos[!groups_match]
+        # my_map <- my_map %>% hideGroup(groups_hide)
+    })
+    
+    #Save selected Layers 
+    #https://stackoverflow.com/questions/41468538/is-it-possible-to-access-r-leaflet-layer-controls-in-shiny-outside-of-leaflet
+    selected_groups <- reactive ({
+      groups_sel <- input$map_groups
+      groups_sel
+    })
     
     
-    
+    #Change values on Number of Radius
     observe({
       if (input$number==1){
         updateSliderInput(session,"n_1_2", value= input$n_1)
@@ -257,85 +347,8 @@ server <- function(input, output, session) {
         #updateSliderInput(session,"n_6", value= defaults[6])
       }
     })
-
-
-
-    # Make a reactve Radius
-    distanz <- reactive({
-      test%>%
-        filter(test$dist <= as.numeric(max(as.integer(c(input$n_1,input$n_2,input$n_3,input$n_4,input$n_5,input$n_6))*1000)))
-    })
     
-    #prepare dataset for cities of interest 
-    anzahl <- reactive({
-      cities_amount <- test%>%
-        count(Ort)%>%
-        filter(n>=input$anzahl)%>%
-        left_join(test, by="Ort")
-    })
-    
-
-    #map output 
-    output$map <- renderLeaflet({
-      #golden marker for hamburg
-      #sources: https://github.com/pointhi/leaflet-color-markers; https://rstudio.github.io/leaflet/markers.html
-      hamburg_marker <- makeIcon(
-        iconUrl = "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-gold.png",
-        iconWidth = 25, iconHeight = 41,
-        iconAnchorX = 25/2, iconAnchorY = 41
-      )
-      
-      auto_marker <- makeIcon(
-        iconUrl = "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png",
-        iconWidth = 15, iconHeight = 25,
-        iconAnchorX = 15/2, iconAnchorY = 25
-      )
-      
-      #draw the map and add markers
-      # See: https://stackoverflow.com/questions/40861908/shiny-r-implement-slider-input
-      distanz <- distanz()
-        my_map <- leaflet(distanz)%>%
-        
-        addTiles()%>%
-        #Layer 1 Cluster Anzeige 
-        # https://rstudio.github.io/leaflet/markers.html  
-        addMarkers(lng=~Laengengrad, 
-                   lat=~Breitengrad,
-                   group="Clustered Markers", 
-                   clusterOptions = markerClusterOptions(),
-                   label=~paste("ID_Fahrzeug: ",
-                                as.character(ID_Fahrzeug),
-                                "\n",
-                                "Produktionsdatum: ",
-                                (Produktionsdatum),
-                                "\n",
-                                "Dist",
-                                (dist))
-                   )%>%
-        #Adds Radius/ Circle arround Hamburg to the map
-        addMarkers(lng=9.993682, lat=53.551085, icon=hamburg_marker)
-        
-        
-        rad <- as.integer(c(input$n_1,input$n_2,input$n_3,input$n_4,input$n_5,input$n_6))*1000
-        rad_frame <- data.frame(rad, "index"=c(1:6))
-        #Color platte for coloring circles with different radius
-        #https://rstudio.github.io/leaflet/colors.html
-        #https://cfss.uchicago.edu/notes/leaflet/
-        pal <- colorFactor("Dark2", rad_frame$index)
-        my_map <- addCircles(map=my_map, data=rad_frame, lng=9.993682, lat=53.551085,radius = ~rad, fillOpacity = 0.02, color = ~pal(rad_frame$index), fillColor = ~pal(rad_frame$index))
-        
-        #Layer 2 Cities of interest 
-        my_map <- addMarkers(map=my_map, data = anzahl (),
-                  lng=~Laengengrad, 
-                  lat=~Breitengrad,
-                  group="Cities of interest",
-                  icon = auto_marker
-                   )
-        #Add map controls for different groups/Layers 
-        my_map <- addLayersControl(map=my_map, overlayGroups = c("Clustered Markers","Cities of interest"),options = layersControlOptions(collapsed = FALSE))
-        
-    })
-    
+    #---------------------------------------------------------------------------------------------------------------------------
 
     #Prepare Dataset due to max radius, only keep necessary info 
     get_basic_dataset <- reactive({
@@ -455,34 +468,86 @@ server <- function(input, output, session) {
     # filled by bundesland 
     # 
     get_plot_dataset_advanced_factor <- reactive({
-      inputvector_sorted <- as.integer(inputvector())
-      names(inputvector_sorted)=c(1:6)
-      inputvector_sorted <- sort(inputvector_sorted,decreasing = FALSE)
+      inputvector_import <- as.integer(inputvector())
+      names(inputvector_import)=c(1:6)
+      #Sort Vector (not needed for now)
+      #inputvector_sorted <- sort(inputvector_sorted,decreasing = FALSE)
+      inputvector_sorted <- inputvector_import
       inputvector_sorted[inputvector_sorted==0]<-NA
-      inputvector_sorted<-inputvector_sorted[!is.na(inputvector_sorted)]
+      inputvector_sorted <- inputvector_sorted[!is.na(inputvector_sorted)]
+      #Get dataset 
       final_rad_all_plot_advanced_factor <- get_basic_dataset()
-      #Kleinster Radiusbis Größter 
-      #1
-      #final_rad_all_plot_advanced_factor$Radius1 <- cut(final_rad_all_plot_advanced_factor$dist, c(0,inputvector_sorted[1]),labels=TRUE)
-      #Radius 1
-      a<-final_rad_all_plot_advanced_factor$dist<=inputvector_sorted[1]
-      final_rad_all_plot_advanced_factor$Radius1 <- a
-      #
-      final_rad_all_plot_advanced_factor <- final_rad_all_plot_advanced_factor%>%
-        group_by(Radius1, Bundesland)%>%
-        #mutate(count_rad1 = sum(Radius1))
-        summarise(count_rad1 = n())%>%
-        ungroup()
-      final_rad_all_plot_advanced_factor$count_rad1 <- final_rad_all_plot_advanced_factor$count_rad1 * final_rad_all_plot_advanced_factor$Radius1
-      # #2
-      # if(input$number == 2|3|4|5|6){
-      #   b <- as.numeric(final_rad_all_plot_advanced_factor$dist<=inputvector_sorted[2])
-      #   final_rad_all_plot_advanced_factor$Radius2 <- b
-      # }
+      
+      
+      if(input$number == 1|2|3|4|5|6){
+        if(inputvector_import["1"]!=0){
+          final_rad_all_plot_advanced_factor$Radius1 <- as.logical(cut(final_rad_all_plot_advanced_factor$dist, c(0,inputvector_sorted["1"]),labels=TRUE))
+          final_rad_all_plot_advanced_factor$Radius1[final_rad_all_plot_advanced_factor$Radius1==TRUE]<-1
+          #summarise to One row for every Bundesland
+          final_rad_all_plot_advanced_factor <- final_rad_all_plot_advanced_factor%>%
+            group_by(Radius1, Bundesland)%>%
+            #mutate(count_rad1 = sum(Radius1))%>%
+            #summarise(count_rad1 = n())%>%
+            ungroup()
+          
+          #final_rad_all_plot_advanced_factor$count_rad1 <- final_rad_all_plot_advanced_factor$count_rad1 * final_rad_all_plot_advanced_factor$Radius1
+        }
+      }
+      # final_rad_all_plot_advanced_factor$Radius2 <- as.logical(cut(final_rad_all_plot_advanced_factor$dist, c(0,inputvector_sorted[2]),labels=TRUE))
+      # final_rad_all_plot_advanced_factor$Radius3 <- as.logical(cut(final_rad_all_plot_advanced_factor$dist, c(0,inputvector_sorted[3]),labels=TRUE))
+      # final_rad_all_plot_advanced_factor$Radius4 <- as.logical(cut(final_rad_all_plot_advanced_factor$dist, c(0,inputvector_sorted[4]),labels=TRUE))
+      # final_rad_all_plot_advanced_factor$Radius5 <- as.logical(cut(final_rad_all_plot_advanced_factor$dist, c(0,inputvector_sorted[5]),labels=TRUE))
+      # final_rad_all_plot_advanced_factor$Radius6 <- as.logical(cut(final_rad_all_plot_advanced_factor$dist, c(0,inputvector_sorted[6]),labels=TRUE))
+      
+      #Radius 1 Alternative zu cut()
+      # a<-final_rad_all_plot_advanced_factor$dist<=inputvector_sorted[1]
+      # final_rad_all_plot_advanced_factor$Radius1 <- a
+      
+      #Radius 2
+      if(input$number == 2|3|4|5|6){
+        if(inputvector_import["2"]!=0){
+          final_rad_all_plot_advanced_factor$Radius2 <- as.logical(cut(final_rad_all_plot_advanced_factor$dist, c(0,inputvector_sorted["2"]),labels=TRUE))
+          final_rad_all_plot_advanced_factor$Radius2[final_rad_all_plot_advanced_factor$Radius2==TRUE]<-2
+        }
+      }
+      # 
+      #Radius3
+      if(input$number == 3|4|5|6){
+        if(inputvector_import["3"]!=0){
+          final_rad_all_plot_advanced_factor$Radius3 <- as.logical(cut(final_rad_all_plot_advanced_factor$dist, c(0,inputvector_sorted["3"]),labels=TRUE))
+          final_rad_all_plot_advanced_factor$Radius3[final_rad_all_plot_advanced_factor$Radius3==TRUE]<-3
+        }
+      }
+      
+      #Radius4
+      if(input$number == 4|5|6){
+        if(inputvector_import["4"]!=0){
+          final_rad_all_plot_advanced_factor$Radius4 <- as.logical(cut(final_rad_all_plot_advanced_factor$dist, c(0,inputvector_sorted["4"]),labels=TRUE))
+          final_rad_all_plot_advanced_factor$Radius4[final_rad_all_plot_advanced_factor$Radius4==TRUE]<-4
+        }
+      }
+      
+      #Radius5
+      if(input$number == 5|6){
+        if(inputvector_import["5"]!=0){
+          final_rad_all_plot_advanced_factor$Radius5 <- as.logical(cut(final_rad_all_plot_advanced_factor$dist, c(0,inputvector_sorted["5"]),labels=TRUE))
+          final_rad_all_plot_advanced_factor$Radius5[final_rad_all_plot_advanced_factor$Radius5==TRUE]<-5
+        }
+      }
+      
+      #Radius6
+      if(input$number == 6){
+        if(inputvector_import["6"]!=0){
+          final_rad_all_plot_advanced_factor$Radius6 <- as.logical(cut(final_rad_all_plot_advanced_factor$dist, c(0,inputvector_sorted["6"]),labels=TRUE))
+          final_rad_all_plot_advanced_factor$Radius6[final_rad_all_plot_advanced_factor$Radius6==TRUE]<-6
+        }
+      }
+      
+      
       final_rad_all_plot_advanced_factor
     })
     
-    observe(print(get_plot_dataset_advanced_factor()))
+    
     
     #prepare dataset for plotting 
     get_plot_dataset <- reactive({
@@ -498,17 +563,23 @@ server <- function(input, output, session) {
       final_rad_all_plot
     })
     
-    #observe(print(get_plot_dataset()))
     
     output$barplot <- renderPlot({
       df1 <- get_plot_dataset_advanced()
       df2 <- get_plot_dataset_advanced_factor()
-      ggplot()+
-        geom_bar(data=df1,aes(Radius, fill = Bundesland))
-        #geom_histogram(data = df2,aes(Radius1, fill=Bundesland),stat="count")
+      p <- ggplot()
+        #geom_bar(data=df1,aes(Radius, fill = Bundesland))
+        #if(Radius3 %in% colnames(df2)){geom_histogram(data = df2, aes(Radius))}
+      p = p+geom_histogram(data = subset(df2, Radius1 %in% c(1)),aes(Radius1, fill=Bundesland),stat="count")
+      if("Radius2" %in% colnames(df2)){p = p + geom_histogram(data = subset(df2, Radius2 %in% c(2)), aes(Radius2, fill=Bundesland),stat="count")}
+      if("Radius3" %in% colnames(df2)){p = p + geom_histogram(data = subset(df2, Radius3 %in% c(3)), aes(Radius3, fill=Bundesland),stat="count")}
+      if("Radius4" %in% colnames(df2)){p = p + geom_histogram(data = subset(df2, Radius4 %in% c(4)), aes(Radius4, fill=Bundesland),stat="count")}
+      if("Radius5" %in% colnames(df2)){p = p + geom_histogram(data = subset(df2, Radius5 %in% c(5)), aes(Radius5, fill=Bundesland),stat="count")}
+      if("Radius6" %in% colnames(df2)){p = p + geom_histogram(data = subset(df2, Radius6 %in% c(6)), aes(Radius6, fill=Bundesland),stat="count")}
         #geom_histogram(data = df2,aes(Radius2, fill=Bundesland),stat="count")+ 
-        
+      p
     })
+    
     
     # output$barplot <- renderPlot({
     #   df <- get_plot_dataset()
