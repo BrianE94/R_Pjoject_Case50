@@ -1,6 +1,6 @@
 ---
 title: "Case_Study_Group_50"
-author: "Long Hong, Vanessa Schwarz, Jonas Rieger, Andre Düding, Brian Eiffert"
+author: "Long Hong, Vanessa Schweitzer, Jonas Rieger, Andre Düding, Brian Eiffert"
 date: "16 7 2020"
 output: 
   html_document:
