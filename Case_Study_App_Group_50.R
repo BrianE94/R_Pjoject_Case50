@@ -401,7 +401,7 @@ server <- function(input, output, session) {
         #https://rdrr.io/cran/janitor/man/remove_empty.html
         remove_empty("cols")
         #fill with "0's"
-        final_rad_all[is.na(final_rad_all)]<-0
+        final_rad_all[-1][is.na(final_rad_all[-1])]<-0
         #https://stackoverflow.com/questions/16363922/convert-a-vector-into-a-list-each-element-in-the-vector-as-an-element-in-the-li
         sum_1 <- list(Bundesland="Sum")
         sum_2 <- as.list(colSums(final_rad_all[-1]))
