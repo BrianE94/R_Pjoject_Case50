@@ -34,16 +34,16 @@ install_load("readr", "tidyverse", "stringr", "readxl","ggplot2", "plotly","lubr
 
 ## Choice of relevant data
 
-In fact, the necessary data is divided up into vehical data, where the diesel engine data and production period is locatetd, and geographical data consiting of the location of the cities and where the vehicels are licensed. An overvies shows the following table.
+In fact, the necessary data is divided up into vehicle data, where the diesel engine data and production period is located, and geographical data consiting of the location of the cities and where the vehicles are licensed. An overview shows the following table.
 
-Vehical data  | Geographical Data
+Vehicle data  | Geographical Data
 ------------- | -------------
 Bestandteile_Fahrzeuge_OEM1_Typ11  | OpenGeoDB_bundesland_plz_ort_de (1)
 Bestandteile_Fahrzeuge_OEM1_Typ12  | Zulassungen_alle_Fahrzeuge
 ahrzeuge_OEM1_Typ11  | Geodaten_Gemeinden_v1.2_2017-08-22_TrR
 ahrzeuge_OEM1_Typ12  | 
 
-The task is to find all relevant type 11 and type 12 vehicles with an engine "K1DI1" from OEM1 that were produced during the problematic period. Getting the proper types of vehicels of OEM 1 the following files are imported by the "readr" package: "Bestandteile_Fahrzeuge_OEM1_Typ11","Bestandteile_Fahrzeuge_OEM1_Typ12", "Fahrzeuge_OEM1_Typ11" and "Fahrzeuge_OEM1_Typ12". Here it is important to define the column types.In "Bestandteile_Fahrzeuge_OEM1_Typ11", "Bestandteile_Fahrzeuge_OEM1_Typ12" contains the relevant "ID_Motor", where the relavant motor type is located. "Fahrzeuge_OEM1_Typ11" and "Fahrzeuge_OEM1_Typ12" contains the production period. For easier later handling of the datat redundant/unessesary columns werde detected and deleted after the import. 
+The task is to find all relevant type 11 and type 12 vehicles with an engine "K1DI1" from OEM1 that were produced during the problematic period. Getting the proper types of vehicles of OEM 1 the following files are imported by the "readr" package: "Bestandteile_Fahrzeuge_OEM1_Typ11","Bestandteile_Fahrzeuge_OEM1_Typ12", "Fahrzeuge_OEM1_Typ11" and "Fahrzeuge_OEM1_Typ12". Here it is important to define the column types.In "Bestandteile_Fahrzeuge_OEM1_Typ11", "Bestandteile_Fahrzeuge_OEM1_Typ12" contains the relevant "ID_Motor", where the relevant motor type is located. "Fahrzeuge_OEM1_Typ11" and "Fahrzeuge_OEM1_Typ12" contains the production period. For easier later handling of the data redundant/unnessesary columns were detected and deleted after the import. 
 ```{r import vehicels,warning = FALSE,message=FALSE}
 # data_bestandteile_oem1_typ11/12, data_fahrzeug_OEM1_typ11/12
 
@@ -73,8 +73,8 @@ data_fahrzeug_OEM1_Typ12$Fehlerhaft_Datum <- as.Date(data_fahrzeug_OEM1_Typ12$Fe
                                                      format = "%Y-%m-%d") # Transform col as date
 
 ```
-Besides, it is nessecary to find the location of the vehicels in Germany. for that addditional data sets have the required information. "OpenGeoDB_bundesland_plz_ort_de (1)", "Zulassungen_alle_Fahrzeuge" and "Geodaten_Gemeinden_v1.2_2017-08-22_TrR" are imported by the "readr" package and the "readexcel" package. For "OpenGeoDB_bundesland_plz_ort_de (1)" cotains the information about the german state, places and postcode. Unfortunately, the data set is missing the place "Seeg", which was added by hand. This missing data was found by the later joining and evaluating the strucuture of the data set. Furthermore place obervations sometimes contains  numbers, which were deleted by the use of the "tm" package. "Zulassungen_alle_Fahrzeuge" contains the data, where the cars got the admission. There the location has to be cleaned, by elimating additionl numbers and convert the word with one big capital letter. "Geodaten_Gemeinden_v1.2_2017-08-22_TrR" contains the location, postal code and the longitude and latitude of the location, which ist very important for developing the Shiny App. 
-An overview illustrates the folling table:
+Besides, it is necessary to find the location of the vehicles in Germany. for that additional data sets have the required information. "OpenGeoDB_bundesland_plz_ort_de (1)", "Zulassungen_alle_Fahrzeuge" and "Geodaten_Gemeinden_v1.2_2017-08-22_TrR" are imported by the "readr" package and the "readexcel" package. For "OpenGeoDB_bundesland_plz_ort_de (1)" contains the information about the German state, places and postcode. Unfortunately, the data set is missing the place "Seeg", which was added by hand. This missing data was found by the later joining and evaluating the structure of the data set. Furthermore place obervations sometimes contains  numbers, which were deleted by the use of the "tm" package. "Zulassungen_alle_Fahrzeuge" contains the data, where the cars got the admission. There, the location has to be cleaned by eliminating additional numbers and convert the word with one big capital letter. "Geodaten_Gemeinden_v1.2_2017-08-22_TrR" contains the location, postal code and the longitude and latitude of the location, which is very important for developing the Shiny App. 
+An overview illustrates the following table:
 
 
 ```{r import location,echo = FALSE,warning = FALSE,message=FALSE}
@@ -117,7 +117,7 @@ The folowing data sets have to be manipulated:
   The vehicels from OEM1 Typ 11, which wer produced in the  production period 1 March 2008- 11 May 2012 are filtered out. Just ID_Motor and production date are elected for for the further evaluation.
 * "Fahrzeug OEM Typ12" (data_fahrzeug_OEM1_Typ12 -> new_data_fahrzeug_OEM1_Typ12):
   The vehicels from OEM1 Typ 12, which wer produced in the  production period 1 March 2008- 11 May 2012 are filtered out. Just ID_Motor and production date are elected for for the further evaluation.
-* "Zulassung" (data_Zulassung -> new_data_Zulassung): First of all, the ID column(IDNummer)is renamed to ID_Fhrzueg just like the columname in the other data sets. ID_Fahrzeug,Ort,Zulassung are selected. Besides, a coloumn, named "ID_Fahrzeug_Nummer" is introduced. Here, The ID number is converted to an integer value by the "bit64" package. This step is necessary, because NA'were produced by joining the data sets by the ID number has a string.
+* "Zulassung" (data_Zulassung -> new_data_Zulassung): First of all, the ID column(IDNummer)is renamed to ID_Fhrzueg just like the columname in the other data sets. ID_Fahrzeug,Ort,Zulassung are selected. Besides, a coloumn, named "ID_Fahrzeug_Nummer" is introduced. Here, The ID number is converted to an integer value by the "bit64" package. This step is necessary, because NA's were produced by joining the data sets by the ID number has a string.
   
 The result is that for Typ 11 and Typ 12 there are two datasets. In one dataset is the diesel engine "K1DI1" and int the other dataset the production period of the faulty control units. Furthermore, the dataset Zulassung is updated for further steps. 
 ```{r data manipulation, ,echo = FALSE,warning = FALSE,message=FALSE}
