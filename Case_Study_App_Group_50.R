@@ -438,7 +438,7 @@ server <- function(input, output, session) {
                 test %>%
                   mutate(dist_zu_ham = dist/1000)%>%
                   select(Ort, Bundesland, Laengengrad, Breitengrad, dist_zu_ham, ID_Fahrzeug, Produktionsdatum, Zulassung)%>%
-                  rename(Town = Ort, State = Bundesland, Longitude = Laengengrad, Latitude = Breitengrad, "Distance to Hamburg in km" = dist_zu_ham, "Vehicle ID" = ID_Fahrzeug, "Production Date" = Produktionsdatum, "Registration Date" = Zulassung)
+                  rename("City/Community" = Ort, State = Bundesland, Longitude = Laengengrad, Latitude = Breitengrad, "Distance to Hamburg in km" = dist_zu_ham, "Vehicle ID" = ID_Fahrzeug, "Production Date" = Produktionsdatum, "Registration Date" = Zulassung)
                 )
     })
     
