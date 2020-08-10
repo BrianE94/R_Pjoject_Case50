@@ -14,7 +14,7 @@ if(!require("install.load")){
 }
 library(install.load)
 
-install_load("shiny", "leaflet", "htmltools", "highcharter","ggplot2", "maps","dplyr","tidyverse","rvest","raster","sf","rgeos","plotly","jpeg","png","RColorBrewer","DT","janitor", "shinythemes", "shinyWidgets")
+install_load("shiny", "leaflet", "htmltools", "highcharter", "ggplot2", "maps", "dplyr", "tidyverse", "rvest", "raster", "sf", "rgeos", "plotly", "jpeg", "png", "RColorBrewer", "DT", "janitor", "shinythemes", "shinyWidgets")
 
 #load saved dataframe from Case_Study_Group_50.Rmd
 load(file="final_data_Group_50.Rda")
@@ -32,7 +32,7 @@ ui <- fluidPage(
         @import url('https://fonts.googleapis.com/css2?family=Anton&display=swap');
         
         h1 {
-          font-family: 'Verdana', cursive;
+          font-family: 'Lucida Console', Courier, monospace;
           font-weight: 500;
           line-height: 1.1;
           color: #698b47;
@@ -136,7 +136,7 @@ server <- function(input, output, session) {
         filter(test$dist <= as.numeric(max(as.integer(c(input$n_1,input$n_2,input$n_3,input$n_4,input$n_5,input$n_6))*1000)))
     })
     
-    #prepare dataset for cities of interest 
+    #prepare dataset for cities of Interest 
     #Nur Filter darf reaktiv sein !!!!!!!!!!!!!!!!
     cities_amount <- test%>%
       count(Ort)%>%
@@ -196,16 +196,16 @@ server <- function(input, output, session) {
         pal <- colorFactor("Dark2", rad_frame$index)
         my_map <- addCircles(map=my_map, data=rad_frame, lng=9.993682, lat=53.551085,radius = ~rad, fillOpacity = 0.02, color = ~pal(rad_frame$index), fillColor = ~pal(rad_frame$index))
         
-        #Layer 2 Cities of interest 
+        #Layer 2 Cities of Interest 
         my_map <- addMarkers(map=my_map, data = anzahl (),
                   lng=~Laengengrad,
                   lat=~Breitengrad,
-                  group="Cities of interest",
+                  group="Cities of Interest",
                   icon = auto_marker
                    )
         #Add map controls for different groups/Layers 
-        my_map <- addLayersControl(map=my_map, overlayGroups = c("Clustered Markers","Cities of interest"),options = layersControlOptions(collapsed = FALSE))
-        # groups_pos <- c("Clustered Markers","Cities of interest")
+        my_map <- addLayersControl(map=my_map, overlayGroups = c("Clustered Markers","Cities of Interest"),options = layersControlOptions(collapsed = FALSE))
+        # groups_pos <- c("Clustered Markers","Cities of Interest")
         # groups_sel <- input$map_groups
         # groups_match <- groups_sel %in% groups_pos
         # groups_hide <- groups_pos[!groups_match]
@@ -403,7 +403,7 @@ server <- function(input, output, session) {
         #fill with "0's"
         final_rad_all[is.na(final_rad_all)]<-0
         #https://stackoverflow.com/questions/16363922/convert-a-vector-into-a-list-each-element-in-the-vector-as-an-element-in-the-li
-        sum_1 <- list(Bundesland="Summe")
+        sum_1 <- list(Bundesland="Sum")
         sum_2 <- as.list(colSums(final_rad_all[-1]))
         sums <- c(sum_1,sum_2)
         #https://stackoverflow.com/questions/28467068/how-can-a-add-a-row-to-a-data-frame-in-r
@@ -420,24 +420,26 @@ server <- function(input, output, session) {
         options = list(paging = FALSE, ordering = FALSE),
         # Disable numbering of the rows: https://stackoverflow.com/questions/55229736/how-to-remove-the-first-column-index-from-data-table-in-r-shiny
         rownames = FALSE,
-        get_dataset_all())%>%
-        # How to highlight the row "Summe": https://rstudio.github.io/DT/010-style.html
+        get_dataset_all()%>%
+          rename("State" = Bundesland)
+        )%>%
+        # How to highlight the row "Sum": https://rstudio.github.io/DT/010-style.html
         formatStyle(
-          'Bundesland',
+          'State',
           target = 'row',
-          backgroundColor = styleEqual("Summe", "#698b47"),
-          color = styleEqual("Summe", "white")
+          backgroundColor = styleEqual("Sum", "#698b47"),
+          color = styleEqual("Sum", "white")
         )
     })
     
     #Basic Datatable to prove visualisations
     output$basic_dataset <- renderDataTable({
-      datatable(test %>%
+      datatable(rownames = FALSE,
+                test %>%
                   mutate(dist_zu_ham = dist/1000)%>%
                   select(Ort, Bundesland, Laengengrad, Breitengrad, dist_zu_ham, ID_Fahrzeug, Produktionsdatum, Zulassung)%>%
-                  rename("Distanz zu Hamburg in km" = dist_zu_ham, Längengrad = Laengengrad, "Fahrzeug ID" = ID_Fahrzeug)
+                  rename(Town = Ort, State = Bundesland, Longitude = Laengengrad, Latitude = Breitengrad, "Distance to Hamburg in km" = dist_zu_ham, "Vehicle ID" = ID_Fahrzeug, "Production Date" = Produktionsdatum, "Registration Date" = Zulassung)
                 )
-      
     })
     
     #barplot output
@@ -552,7 +554,7 @@ server <- function(input, output, session) {
     #prepare dataset for plotting 
     get_plot_dataset <- reactive({
       final_rad_all_plot <- get_dataset_all()%>%
-        filter(Bundesland == "Summe")
+        filter(Bundesland == "Sum")
       name_cols <- colnames(final_rad_all_plot[-1])
       print(name_cols)
       #https://stackoverflow.com/questions/6778908/transpose-a-data-frame
@@ -567,7 +569,14 @@ server <- function(input, output, session) {
     output$barplot <- renderPlot({
       df1 <- get_plot_dataset_advanced()
       df2 <- get_plot_dataset_advanced_factor()
-      p <- ggplot()
+      p <- ggplot() +
+        # Changing labels to English, changing Plot Theme, source: https://stackoverflow.com/questions/23635662/editing-legend-text-labels-in-ggplot
+        labs(title = "Number of registered vehicles within each radius", x = "Radius Number", y = "Number of registered vehicles", fill = "State")+
+        theme(axis.text.x = element_text(size = 14), axis.title.x = element_text(size = 16, color = "#698b47"),
+              axis.text.y = element_text(size = 14), axis.title.y = element_text(size = 16, color = "#698b47"),
+              plot.title = element_text(size = 20, face = "bold", color = "#698b47"),
+              legend.title = element_text(size = 16, color = "#698b47"),
+              legend.text = element_text(size = 14))
         #geom_bar(data=df1,aes(Radius, fill = Bundesland))
         #if(Radius3 %in% colnames(df2)){geom_histogram(data = df2, aes(Radius))}
       p = p+geom_histogram(data = subset(df2, Radius1 %in% c(1)),aes(Radius1, fill=Bundesland),stat="count")
