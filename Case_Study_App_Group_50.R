@@ -53,7 +53,7 @@ ui <- fluidPage(
       # Radius Input
         #selectInput("value", "Select Radius in km:", c(seq(25000, 700000, by=25000)), selected=50000, multiple=TRUE, width = 150), 
         #multiple choice number of radius
-        selectInput("number", "select number of radius to compare", c(1:6), width= 200),
+        selectInput("number", "Select number of radii to compare", c(1:6), width= 200),
         conditionalPanel(
           condition = "input.number == 1",
           sliderInput("n_1","Select Radius", min=25, max = 700, step = 25, value= 50)
@@ -130,7 +130,7 @@ server <- function(input, output, session) {
     #https://stackoverflow.com/questions/33662033/shiny-how-to-make-reactive-value-initialize-with-default-value#38565508
     defaults <- isolate(as.integer(c(input$n_1,input$n_2,input$n_3,input$n_4,input$n_5,input$n_6)))
 
-    # Make a reactve Radius
+    # Make a reactive Radius
     distanz <- reactive({
       test%>%
         filter(test$dist <= as.numeric(max(as.integer(c(input$n_1,input$n_2,input$n_3,input$n_4,input$n_5,input$n_6))*1000)))
@@ -223,11 +223,13 @@ server <- function(input, output, session) {
     #Change values on Number of Radius
     observe({
       if (input$number==1){
+        # When radius 1 is set, it is also saved for when there is more than one radius but is still adjustable
         updateSliderInput(session,"n_1_2", value= input$n_1)
         updateSliderInput(session,"n_1_3", value= input$n_1)
         updateSliderInput(session,"n_1_4", value= input$n_1)
         updateSliderInput(session,"n_1_5", value= input$n_1)
         updateSliderInput(session,"n_1_6", value= input$n_1)
+        # All radii that are not needed are set to 0
         updateSliderInput(session,"n_2", value= 0)
         updateSliderInput(session,"n_3", value= 0)
         updateSliderInput(session,"n_4", value= 0)
@@ -236,16 +238,17 @@ server <- function(input, output, session) {
       }
       if(input$number==2){  
         val1 <- input$n_1_2
+        # When radius 1 is adjusted, it is also saved for the other numbers of radii
         updateSliderInput(session,"n_1_3", value= val1)
         updateSliderInput(session,"n_1_4", value= val1)
         updateSliderInput(session,"n_1_5", value= val1)
         updateSliderInput(session,"n_1_6", value= val1)
-        #uhguzhd
+        # When radius 2 is set, it is also saved for when there is more than two radii but is still adjustable
         updateSliderInput(session,"n_2_3", value= input$n_2)
         updateSliderInput(session,"n_2_4", value= input$n_2)
         updateSliderInput(session,"n_2_5", value= input$n_2)
         updateSliderInput(session,"n_2_6", value= input$n_2)
-        #uzgfuizwfv
+        # All radii that are not needed are set to 0
         updateSliderInput(session,"n_1", value= val1)
         #updateSliderInput(session,"n_2", value= defaults[2])
         updateSliderInput(session,"n_3", value= 0)
@@ -256,19 +259,20 @@ server <- function(input, output, session) {
       if(input$number==3){
         val1 <- input$n_1_3
         val2 <- input$n_2_3
+        
+        #The inputs are adjusted according to the pattern above
         updateSliderInput(session,"n_1_4", value= val1)
         updateSliderInput(session,"n_1_5", value= val1)
         updateSliderInput(session,"n_1_6", value= val1)
-        #iuhjgviudf
+        
         updateSliderInput(session,"n_2_4", value= val2)
         updateSliderInput(session,"n_2_5", value= val2)
         updateSliderInput(session,"n_2_6", value= val2)
-        #guzuugi
+        
         updateSliderInput(session,"n_3_4", value= input$n_3)
         updateSliderInput(session,"n_3_5", value= input$n_3)
         updateSliderInput(session,"n_3_6", value= input$n_3)
         
-        #giuciuebhvcis
         updateSliderInput(session,"n_1", value= val1)
         updateSliderInput(session,"n_2", value= val2)
         #updateSliderInput(session,"n_3", value= defaults[3])
@@ -281,21 +285,19 @@ server <- function(input, output, session) {
         val2 <- input$n_2_4
         val3 <- input$n_3_4
         
+        #The inputs are adjusted according to the pattern above
         updateSliderInput(session,"n_1_5", value= val1)
         updateSliderInput(session,"n_1_6", value= val1)
-        #iuhjgviudf
         
         updateSliderInput(session,"n_2_5", value= val2)
         updateSliderInput(session,"n_2_6", value= val2)
-        #giuui
+        
         updateSliderInput(session,"n_3_5", value= val3)
         updateSliderInput(session,"n_3_6", value= val3)
-        #guzuugi
         
         updateSliderInput(session,"n_4_5", value= input$n_4)
         updateSliderInput(session,"n_4_6", value= input$n_4)
         
-        #giuciuebhvcis
         updateSliderInput(session,"n_1", value= val1)
         updateSliderInput(session,"n_2", value= val2)
         updateSliderInput(session,"n_3", value= val3)
@@ -309,22 +311,16 @@ server <- function(input, output, session) {
         val3 <- input$n_3_5
         val4 <- input$n_4_5
         
-        
+        #The inputs are adjusted according to the pattern above
         updateSliderInput(session,"n_1_6", value= val1)
-        #iuhjgviudf
-        
-        
+
         updateSliderInput(session,"n_2_6", value= val2)
-        #giuui
         
         updateSliderInput(session,"n_3_6", value= val3)
         
         updateSliderInput(session,"n_4_6", value= val4)
-        #guzuugi
-        
         
         updateSliderInput(session,"n_5_6", value= input$n_5)
-        
         
         updateSliderInput(session,"n_1", value= val1)
         updateSliderInput(session,"n_2", value= val2)
@@ -465,9 +461,9 @@ server <- function(input, output, session) {
     })
     
     #factor for every single radius 
-    # Radiuss 1 immer ganz links Radius 6 immer ganz rechts --> sorting 
-    # akkumlierte ansicht 
-    # filled by bundesland 
+    # Radius 1 always on the left-hand side and radius 6 always on the right-hand side --> sorting 
+    # accumulated cases
+    # filled by Bundesland
     # 
     get_plot_dataset_advanced_factor <- reactive({
       inputvector_import <- as.integer(inputvector())
