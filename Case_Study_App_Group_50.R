@@ -56,42 +56,42 @@ ui <- fluidPage(
         selectInput("number", "Select number of radii to compare", c(1:6), width= 200),
         conditionalPanel(
           condition = "input.number == 1",
-          sliderInput("n_1","Select Radius", min=25, max = 700, step = 25, value= 50)
+          sliderInput("n_1","Select Radius 1", min=25, max = 700, step = 25, value= 50)
         ), 
         conditionalPanel(
           condition = "input.number == 2",
-          sliderInput("n_1_2","Select Radius", min=25, max = 700, step = 25, value= 50),
-          sliderInput("n_2","Select Radius", min=0, max = 700, step = 25, value=100)
+          sliderInput("n_1_2","Select Radius 1", min=25, max = 700, step = 25, value= 50),
+          sliderInput("n_2","Select Radius 2", min=0, max = 700, step = 25, value=100)
         ),
         conditionalPanel(
           condition = "input.number == 3",
-          sliderInput("n_1_3","Select Radius", min=25, max = 700, step = 25, value= 50),
-          sliderInput("n_2_3","Select Radius", min=25, max = 700, step = 25, value= 100),
-          sliderInput("n_3","Select Radius", min=0, max = 700, step = 25, value= 200)
+          sliderInput("n_1_3","Select Radius 1", min=25, max = 700, step = 25, value= 50),
+          sliderInput("n_2_3","Select Radius 2", min=25, max = 700, step = 25, value= 100),
+          sliderInput("n_3","Select Radius 3", min=0, max = 700, step = 25, value= 200)
         ),
         conditionalPanel(
           condition = "input.number == 4",
-          sliderInput("n_1_4","Select Radius", min=25, max = 700, step = 25, value= 50),
-          sliderInput("n_2_4","Select Radius", min=25, max = 700, step = 25, value= 100),
-          sliderInput("n_3_4","Select Radius", min=0, max = 700, step = 25, value= 200),
-          sliderInput("n_4","Select Radius", min=0, max = 700, step = 25, value= 300)
+          sliderInput("n_1_4","Select Radius 1", min=25, max = 700, step = 25, value= 50),
+          sliderInput("n_2_4","Select Radius 2", min=25, max = 700, step = 25, value= 100),
+          sliderInput("n_3_4","Select Radius 3", min=0, max = 700, step = 25, value= 200),
+          sliderInput("n_4","Select Radius 4", min=0, max = 700, step = 25, value= 300)
         ),
         conditionalPanel(
           condition = "input.number == 5",
-          sliderInput("n_1_5","Select Radius", min=25, max = 700, step = 25, value= 50),
-          sliderInput("n_2_5","Select Radius", min=25, max = 700, step = 25, value= 100),
-          sliderInput("n_3_5","Select Radius", min=0, max = 700, step = 25, value= 200),
-          sliderInput("n_4_5","Select Radius", min=0, max = 700, step = 25, value= 300),
-          sliderInput("n_5","Select Radius", min=0, max = 700, step = 25, value= 400)
+          sliderInput("n_1_5","Select Radius 1", min=25, max = 700, step = 25, value= 50),
+          sliderInput("n_2_5","Select Radius 2", min=25, max = 700, step = 25, value= 100),
+          sliderInput("n_3_5","Select Radius 3", min=0, max = 700, step = 25, value= 200),
+          sliderInput("n_4_5","Select Radius 4", min=0, max = 700, step = 25, value= 300),
+          sliderInput("n_5","Select Radius 5", min=0, max = 700, step = 25, value= 400)
         ),
         conditionalPanel(
           condition = "input.number == 6",
-          sliderInput("n_1_6","Select Radius", min=25, max = 700, step = 25, value= 50),
-          sliderInput("n_2_6","Select Radius", min=25, max = 700, step = 25, value= 100),
-          sliderInput("n_3_6","Select Radius", min=0, max = 700, step = 25, value= 200),
-          sliderInput("n_4_6","Select Radius", min=0, max = 700, step = 25, value= 300),
-          sliderInput("n_5_6","Select Radius", min=0, max = 700, step = 25, value= 400),
-          sliderInput("n_6","Select Radius", min=0, max = 700, step = 25, value= 500)
+          sliderInput("n_1_6","Select Radius 1", min=25, max = 700, step = 25, value= 50),
+          sliderInput("n_2_6","Select Radius 2", min=25, max = 700, step = 25, value= 100),
+          sliderInput("n_3_6","Select Radius 3", min=0, max = 700, step = 25, value= 200),
+          sliderInput("n_4_6","Select Radius 4", min=0, max = 700, step = 25, value= 300),
+          sliderInput("n_5_6","Select Radius 5", min=0, max = 700, step = 25, value= 400),
+          sliderInput("n_6","Select Radius 6", min=0, max = 700, step = 25, value= 500)
         ),
         # Add user input to highlight cities and communities with a certain amount of affected vehicles (4.d)
         sliderInput("anzahl", "Select a critical number to find all cities and communities with a certain amount of affected registered vehicles", min = 20, max = 300, value = 250)
