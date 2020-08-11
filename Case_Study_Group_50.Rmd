@@ -226,6 +226,13 @@ kable(graph_data_ort,caption="Summary: Geographical Data ")
 # get final dataset by joining location and OEM data set
 final_data_Group_50 <- left_join(data_OEM,data_Ort,by="ID_Fahrzeug_Nummer")%>%# Joining cars with Zulassung
   rename(ID_Fahrzeug = ID_Fahrzeug.x)
+  
+number_towns <- final_data_Group_50%>%  
+  count(Ort)
+
+final_data_Group_50_V2 <- left_join(final_data_Group_50,number_towns,by="Ort")%>%
+  distinct(ID_Fahrzeug, .keep_all=TRUE)
+
 final_data_Group_50$ID_Fahrzeug.y <- NULL # delete extra column after joining
 final_data_Group_50$ID_Fahrzeug_Nummer <- NULL
 ```
