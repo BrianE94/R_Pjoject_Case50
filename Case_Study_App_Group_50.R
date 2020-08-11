@@ -18,9 +18,10 @@ install_load("shiny", "leaflet", "htmltools", "highcharter", "ggplot2", "maps", 
 
 #load saved dataframe from Case_Study_Group_50.Rmd
 load(file="final_data_Group_50.Rda")
+load(file="final_data_Group_50_K.Rda")
 
 #test: First run with 1000  
-test <- final_data_Group_50%>%
+test <- final_data_Group_50_K%>%
   head(100000)
 
 
@@ -56,42 +57,42 @@ ui <- fluidPage(
         selectInput("number", "Select number of radii to compare", c(1:6), width= 200),
         conditionalPanel(
           condition = "input.number == 1",
-          sliderInput("n_1","Select Radius 1", min=25, max = 700, step = 25, value= 50)
+          sliderInput("n_1","Select Radius 1 in km", min=25, max = 700, step = 25, value= 50)
         ), 
         conditionalPanel(
           condition = "input.number == 2",
-          sliderInput("n_1_2","Select Radius 1", min=25, max = 700, step = 25, value= 50),
-          sliderInput("n_2","Select Radius 2", min=0, max = 700, step = 25, value=100)
+          sliderInput("n_1_2","Select Radius 1 in km", min=25, max = 700, step = 25, value= 50),
+          sliderInput("n_2","Select Radius 2 in km", min=0, max = 700, step = 25, value=100)
         ),
         conditionalPanel(
           condition = "input.number == 3",
-          sliderInput("n_1_3","Select Radius 1", min=25, max = 700, step = 25, value= 50),
-          sliderInput("n_2_3","Select Radius 2", min=25, max = 700, step = 25, value= 100),
-          sliderInput("n_3","Select Radius 3", min=0, max = 700, step = 25, value= 200)
+          sliderInput("n_1_3","Select Radius 1 in km", min=25, max = 700, step = 25, value= 50),
+          sliderInput("n_2_3","Select Radius 2 in km", min=25, max = 700, step = 25, value= 100),
+          sliderInput("n_3","Select Radius 3 in km", min=0, max = 700, step = 25, value= 200)
         ),
         conditionalPanel(
           condition = "input.number == 4",
-          sliderInput("n_1_4","Select Radius 1", min=25, max = 700, step = 25, value= 50),
-          sliderInput("n_2_4","Select Radius 2", min=25, max = 700, step = 25, value= 100),
-          sliderInput("n_3_4","Select Radius 3", min=0, max = 700, step = 25, value= 200),
-          sliderInput("n_4","Select Radius 4", min=0, max = 700, step = 25, value= 300)
+          sliderInput("n_1_4","Select Radius 1 in km", min=25, max = 700, step = 25, value= 50),
+          sliderInput("n_2_4","Select Radius 2 in km", min=25, max = 700, step = 25, value= 100),
+          sliderInput("n_3_4","Select Radius 3 in km", min=0, max = 700, step = 25, value= 200),
+          sliderInput("n_4","Select Radius 4 in km", min=0, max = 700, step = 25, value= 300)
         ),
         conditionalPanel(
           condition = "input.number == 5",
-          sliderInput("n_1_5","Select Radius 1", min=25, max = 700, step = 25, value= 50),
-          sliderInput("n_2_5","Select Radius 2", min=25, max = 700, step = 25, value= 100),
-          sliderInput("n_3_5","Select Radius 3", min=0, max = 700, step = 25, value= 200),
-          sliderInput("n_4_5","Select Radius 4", min=0, max = 700, step = 25, value= 300),
-          sliderInput("n_5","Select Radius 5", min=0, max = 700, step = 25, value= 400)
+          sliderInput("n_1_5","Select Radius 1 in km", min=25, max = 700, step = 25, value= 50),
+          sliderInput("n_2_5","Select Radius 2 in km", min=25, max = 700, step = 25, value= 100),
+          sliderInput("n_3_5","Select Radius 3 in km", min=0, max = 700, step = 25, value= 200),
+          sliderInput("n_4_5","Select Radius 4 in km", min=0, max = 700, step = 25, value= 300),
+          sliderInput("n_5","Select Radius 5 in km", min=0, max = 700, step = 25, value= 400)
         ),
         conditionalPanel(
           condition = "input.number == 6",
-          sliderInput("n_1_6","Select Radius 1", min=25, max = 700, step = 25, value= 50),
-          sliderInput("n_2_6","Select Radius 2", min=25, max = 700, step = 25, value= 100),
-          sliderInput("n_3_6","Select Radius 3", min=0, max = 700, step = 25, value= 200),
-          sliderInput("n_4_6","Select Radius 4", min=0, max = 700, step = 25, value= 300),
-          sliderInput("n_5_6","Select Radius 5", min=0, max = 700, step = 25, value= 400),
-          sliderInput("n_6","Select Radius 6", min=0, max = 700, step = 25, value= 500)
+          sliderInput("n_1_6","Select Radius 1 in km", min=25, max = 700, step = 25, value= 50),
+          sliderInput("n_2_6","Select Radius 2 in km", min=25, max = 700, step = 25, value= 100),
+          sliderInput("n_3_6","Select Radius 3 in km", min=0, max = 700, step = 25, value= 200),
+          sliderInput("n_4_6","Select Radius 4 in km", min=0, max = 700, step = 25, value= 300),
+          sliderInput("n_5_6","Select Radius 5 in km", min=0, max = 700, step = 25, value= 400),
+          sliderInput("n_6","Select Radius 6 in km", min=0, max = 700, step = 25, value= 500)
         ),
         # Add user input to highlight cities and communities with a certain amount of affected vehicles (4.d)
         sliderInput("anzahl", "Select a critical number to find all cities and communities with a certain amount of affected registered vehicles", min = 500, max = 3000, value = 1500)
@@ -175,14 +176,15 @@ server <- function(input, output, session) {
                    lat=~Breitengrad,
                    group="Clustered Markers", 
                    clusterOptions = markerClusterOptions(),
-                   label=~paste("ID_Fahrzeug: ",
+                   label=~paste("Vehicle ID: ",
                                 as.character(ID_Fahrzeug),
-                                "\n",
-                                "Produktionsdatum: ",
+                                "|\n",
+                                "Motor Production Date: ",
                                 (Produktionsdatum),
-                                "\n",
-                                "Dist",
-                                (dist))
+                                "|\n",
+                                "Distance to Hamburg in km",
+                                (dist/1000),
+                                sep="\n")
                    )%>%
         #Adds Radius/ Circle arround Hamburg to the map
         addMarkers(lng=9.993682, lat=53.551085, icon=hamburg_marker)
@@ -433,8 +435,8 @@ server <- function(input, output, session) {
       datatable(rownames = FALSE,
                 test %>%
                   mutate(dist_zu_ham = dist/1000)%>%
-                  select(Ort, Bundesland, Laengengrad, Breitengrad, dist_zu_ham, ID_Fahrzeug, Produktionsdatum, Zulassung)%>%
-                  rename("City/Community" = Ort, State = Bundesland, Longitude = Laengengrad, Latitude = Breitengrad, "Distance to Hamburg in km" = dist_zu_ham, "Vehicle ID" = ID_Fahrzeug, "Production Date" = Produktionsdatum, "Registration Date" = Zulassung)
+                  select(Ort, Bundesland, Laengengrad, Breitengrad, ID_Motor,Produktionsdatum, ID_Fahrzeug, Zulassung, dist_zu_ham, n)%>%
+                  rename("City/Community" = Ort, State = Bundesland, Longitude = Laengengrad, Latitude = Breitengrad, "Distance to Hamburg in km" = dist_zu_ham, "Vehicle ID" = ID_Fahrzeug, "Production Date of the Motor" = Produktionsdatum, "Registration Date of the Vehicle" = Zulassung, "Motor ID" = ID_Motor, "Cases in City/Community"=n)
                 )
     })
     
