@@ -21,7 +21,7 @@ load(file="final_data_Group_50.Rda")
 
 #test: First run with 1000  
 test <- final_data_Group_50%>%
-  head(1000)
+  head(100000)
 
 
 # Define UI for application that draws a histogram
@@ -94,7 +94,7 @@ ui <- fluidPage(
           sliderInput("n_6","Select Radius 6", min=0, max = 700, step = 25, value= 500)
         ),
         # Add user input to highlight cities and communities with a certain amount of affected vehicles (4.d)
-        sliderInput("anzahl", "Select a critical number to find all cities and communities with a certain amount of affected registered vehicles", min = 20, max = 300, value = 250)
+        sliderInput("anzahl", "Select a critical number to find all cities and communities with a certain amount of affected registered vehicles", min = 500, max = 3000, value = 1500)
       ),
       #Creating MainPanel with Tabsets
       mainPanel(

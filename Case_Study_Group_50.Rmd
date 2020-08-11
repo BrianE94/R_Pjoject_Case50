@@ -40,8 +40,8 @@ Vehicle data  | Geographical Data
 ------------- | -------------
 Bestandteile_Fahrzeuge_OEM1_Typ11  | OpenGeoDB_bundesland_plz_ort_de (1)
 Bestandteile_Fahrzeuge_OEM1_Typ12  | Zulassungen_alle_Fahrzeuge
-ahrzeuge_OEM1_Typ11  | Geodaten_Gemeinden_v1.2_2017-08-22_TrR
-ahrzeuge_OEM1_Typ12  | 
+Fahrzeuge_OEM1_Typ11  | Geodaten_Gemeinden_v1.2_2017-08-22_TrR
+Fahrzeuge_OEM1_Typ12  | 
 
 The task is to find all relevant type 11 and type 12 vehicles with an engine "K1DI1" from OEM1 that were produced during the problematic period. Getting the proper types of vehicles of OEM 1 the following files are imported by the "readr" package: "Bestandteile_Fahrzeuge_OEM1_Typ11","Bestandteile_Fahrzeuge_OEM1_Typ12", "Fahrzeuge_OEM1_Typ11" and "Fahrzeuge_OEM1_Typ12". Here it is important to define the column types.In "Bestandteile_Fahrzeuge_OEM1_Typ11", "Bestandteile_Fahrzeuge_OEM1_Typ12" contains the relevant "ID_Motor", where the relevant motor type is located. "Fahrzeuge_OEM1_Typ11" and "Fahrzeuge_OEM1_Typ12" contains the production period. For easier later handling of the data redundant/unnessesary columns were detected and deleted after the import. 
 ```{r import vehicels,warning = FALSE,message=FALSE}
@@ -81,8 +81,14 @@ An overview illustrates the following table:
 # Import Location and Zulassung
 
 data_bundesland_plz_ort <- read_excel("./Data/Zulassungen/OpenGeoDB_bundesland_plz_ort_de (1).xls", col_names = c("Bundesland","PLZ","Ort"))%>% #import data
-  add_row(Bundesland="Bayern",PLZ="87637",Ort="Seeg")# add data to the data set
-data_bundesland_plz_ort$Ort <- removeNumbers(data_bundesland_plz_ort$Ort)# remove unncessary numbers, for more in  https://stackoverflow.com/questions/13590139/remove-numbers-from-alphanumeric-characters
+  add_row(Bundesland="Bayern",PLZ="87637",Ort="Seeg") %>% # add data to the data set
+  add_row(Bundesland="Thüringen",PLZ="98630",Ort="Roemhild") %>% # add data to the data set
+  add_row(Bundesland="Thüringen",PLZ="99820",Ort="Hoerselberg Hainich") %>% # add data to the data set
+  subset(Ort!="Mockrehna")%>% # remove row with false PLZ, Source: https://stackoverflow.com/questions/12328056/how-do-i-delete-rows-in-a-data-frame
+  add_row(Bundesland="Sachsen",PLZ="04862",Ort="Mockrehna")%>% # add data to the data set
+  add_row(Bundesland="Sachsen",PLZ="08344",Ort="Gruenhain Beierfeld")
+
+data_bundesland_plz_ort$Ort <- removeNumbers(data_bundesland_plz_ort$Ort)# remove unnecessary numbers, for more in  https://stackoverflow.com/questions/13590139/remove-numbers-from-alphanumeric-characters
 
 
 #Problem mit Länge der PLZ bei Transformation zu integer (see "Leading Zeros") bei Sachsen
@@ -97,6 +103,7 @@ data_Zulassung$X1 <- NULL # Remove unnecessary column
 data_Geodaten_Gemeinden <- read_csv2("./Data/Geodaten/Geodaten_Gemeinden_v1.2_2017-08-22_TrR.csv",col_types =                                    cols(Postleitzahl=col_character(),Laengengrad=col_double(),Breitengrad=col_double()))%>%
   rename(Ort=Gemeinde,PLZ= Postleitzahl)%>%
   add_row(PLZ="87637",Ort="Seeg",Laengengrad=10.6104157,Breitengrad=47.6542215)
+  
 
 data_Geodaten_Gemeinden$PLZ <- str_pad(data_Geodaten_Gemeinden$PLZ,5,pad = "0") # Add missing Zeros to PLZ length under 5, for more info see https://stackoverflow.com/questions/5812493/how-to-add-leading-zeros
 data_Geodaten_Gemeinden$Ort <- removeNumbers(data_Geodaten_Gemeinden$Ort) # Remove unnecessary numbers in location
@@ -177,6 +184,9 @@ data_OEM <- left_join(data_fahrzeug_OEM1,data_bestandteile_OEM1,
                        by="ID_Fahrzeug_Nummer",na_matches="never")%>%# Get Dataset to get engine and production date. Dealing with NA see: https://stackoverflow.com/questions/58454706/how-do-i-fix-error-stdbad-alloc-message-when-using-dplyr-full-join-to-join-3
             rename(ID_Fahrzeug = ID_Fahrzeug.x)
 data_OEM <- data_OEM[!is.na(data_OEM$ID_Motor),]
+
+# Deleting duplicate rows: https://dplyr.tidyverse.org/reference/distinct.html
+data_OEM <- distinct(data_OEM)
   
 data_OEM$ID_Fahrzeug.y <- NULL # delete extra column after joining
 
@@ -230,6 +240,9 @@ final_data_Group_50 <- left_join(data_OEM,data_Ort,by="ID_Fahrzeug_Nummer")%>%# 
   rename(ID_Fahrzeug = ID_Fahrzeug.x)
 final_data_Group_50$ID_Fahrzeug.y <- NULL # delete extra column after joining
 final_data_Group_50$ID_Fahrzeug_Nummer <- NULL
+
+# delete duplicate rows
+#final_data_Group_50 <- distinct(final_data_Group_50)
 ```
 **The final data set is saved for the Shiny App**
 ```{r FinalDataSet}
@@ -242,632 +255,632 @@ save(final_data_Group_50, file="final_data_Group_50.Rda")
 ```
 
 
-# Designing the Shiny-App
+<!-- # Designing the Shiny-App -->
 
-After the data was prepared and merged into a final data set, we developed a Shiny-App to evaluate the data.
-The content aspects that needed to be implemented were:
-Develop a Shiny app and visualize the following:
+<!-- After the data was prepared and merged into a final data set, we developed a Shiny-App to evaluate the data. -->
+<!-- The content aspects that needed to be implemented were: -->
+<!-- Develop a Shiny app and visualize the following: -->
 
-*	A variable user input that defines the number and radii of concentric perimeters
+<!-- *	A variable user input that defines the number and radii of concentric perimeters -->
 
-*	A bar graph that displays the number of registered vehicles that were registered within that area of each perimeter. The larger area always contains the data of the smaller areas.
+<!-- *	A bar graph that displays the number of registered vehicles that were registered within that area of each perimeter. The larger area always contains the data of the smaller areas. -->
 
-*	A map of Germany visualizing the defined perimeters around Hamburg. For each commune with registered cars that are affected, create a pop-up to display the number of affected cars.
+<!-- *	A map of Germany visualizing the defined perimeters around Hamburg. For each commune with registered cars that are affected, create a pop-up to display the number of affected cars. -->
 
-*	Highlight cities and communities on the map which have a certain amount (user input in relative or absolute numbers) or more effected registered vehicles.
+<!-- *	Highlight cities and communities on the map which have a certain amount (user input in relative or absolute numbers) or more effected registered vehicles. -->
 
-*	Your basic dataset so you can prove your visualization. Remember: Only show necessary attributes. Therefore, add a table to your application, containing only necessary content.
+<!-- *	Your basic dataset so you can prove your visualization. Remember: Only show necessary attributes. Therefore, add a table to your application, containing only necessary content. -->
 
-## Implementing the App
+<!-- ## Implementing the App -->
 
-First, we loaded the shiny package and with install.load, we installed all further required R packages. Afterwards, we loaded the dataset finak_data_Group_50 which we had prepared in the steps before.
+<!-- First, we loaded the shiny package and with install.load, we installed all further required R packages. Afterwards, we loaded the dataset finak_data_Group_50 which we had prepared in the steps before. -->
 
-```{r installations, warning = FALSE,message= FALSE}
+<!-- ```{r installations, warning = FALSE,message= FALSE} -->
 
-library(shiny)
+<!-- library(shiny) -->
 
-if(!require("install.load")){
-    install.packages("install.load")
-}
-library(install.load)
+<!-- if(!require("install.load")){ -->
+<!--     install.packages("install.load") -->
+<!-- } -->
+<!-- library(install.load) -->
 
-install_load("shiny", "leaflet", "htmltools", "highcharter", "ggplot2", "maps", "dplyr", "tidyverse", "rvest", "raster", "sf", "rgeos", "plotly", "jpeg", "png", "RColorBrewer", "DT", "janitor", "shinythemes", "shinyWidgets")
+<!-- install_load("shiny", "leaflet", "htmltools", "highcharter", "ggplot2", "maps", "dplyr", "tidyverse", "rvest", "raster", "sf", "rgeos", "plotly", "jpeg", "png", "RColorBrewer", "DT", "janitor", "shinythemes", "shinyWidgets") -->
 
-#load saved dataframe from Case_Study_Group_50.Rmd
-load(file="final_data_Group_50.Rda")
+<!-- #load saved dataframe from Case_Study_Group_50.Rmd -->
+<!-- load(file="final_data_Group_50.Rda") -->
 
-#test: First run with 1000  
-test <- final_data_Group_50%>%
-  head(1000)
-
-
-```
-
-### User Interface (UI)
-Then, we had to program the UI. As required, we changed the font and also the color of the App title.
-To adjust the layout to the color "grass-green" we had to find out which color or color code was meant by this color name as there were several options. We decided to use the code **#698b47** after https://www.britishstandardcolour.com/ or https://www.w3schools.com/colors/colors_british.asp .
-
-While designing the UI, we colored the title of the App as well as the input sliders in the color "Grass Green". We chose the shinytheme "sandstone" as the App theme because it harmonizes well with the corporate color.
-
-The Layout is divided into a sidebarPanel and a mainPanel.
-
-The **sidebarPanel** contains adjustable inputs.
-
-Since the user is supposed to be able to choose a number of radii, we used a selectInput. Here, the user can choose between 1 to 6 radii.
-Depending on the number of radii chosen, there has to be a variable number of inputSliders to choose the radius for each perimeter. Therefore, we added conditionalPanels depending on the given selectInput.
-We also added a sliderInput so that the user can assign a critical amount of affected vehicles.
+<!-- #test: First run with 1000   -->
+<!-- test <- final_data_Group_50%>% -->
+<!--   head(1000) -->
 
 
-In the **mainPanel**, the outputs are displayed and it contains a logo, as demanded.
+<!-- ``` -->
 
-The mainPanel contains four tabPanels, i.e. a map, a barplot, a table, and the basic dataset to prove all visualisations.
+<!-- ### User Interface (UI) -->
+<!-- Then, we had to program the UI. As required, we changed the font and also the color of the App title. -->
+<!-- To adjust the layout to the color "grass-green" we had to find out which color or color code was meant by this color name as there were several options. We decided to use the code **#698b47** after https://www.britishstandardcolour.com/ or https://www.w3schools.com/colors/colors_british.asp . -->
 
-```{r user interface, warning = FALSE,message= FALSE}
+<!-- While designing the UI, we colored the title of the App as well as the input sliders in the color "Grass Green". We chose the shinytheme "sandstone" as the App theme because it harmonizes well with the corporate color. -->
 
-# Define UI
-ui <- fluidPage(
-    #change font https://shiny.rstudio.com/articles/css.html
-    tags$head(
-      tags$style(HTML("
-        @import url('https://fonts.googleapis.com/css2?family=Anton&display=swap');
-        
-        h1 {
-          font-family: 'Lucida Console', Courier, monospace;
-          font-weight: 500;
-          line-height: 1.1;
-          color: #698b47;
-        }
-  
-      "))
-    ),
-    # Application title
-    headerPanel("Car Recall Action"),
-    # Adding a theme
-    theme = shinythemes::shinytheme('sandstone'),
-    # How to change the color of slider inputs: https://www.rdocumentation.org/packages/shinyWidgets/versions/0.5.3/topics/setSliderColor
-    setSliderColor(c("#698b47", "#698b47","#698b47","#698b47","#698b47", "#698b47", "#698b47","#698b47","#698b47","#698b47","#698b47", "#698b47","#698b47","#698b47","#698b47","#698b47", "#698b47","#698b47","#698b47","#698b47", "#698b47", "#698b47"), c(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22)),
-    #Creating a sidebarLayout 
-    sidebarLayout(
-      #Creating Sidebar
-      sidebarPanel(
-      # Radius Input
-        #selectInput("value", "Select Radius in km:", c(seq(25000, 700000, by=25000)), selected=50000, multiple=TRUE, width = 150), 
-        #multiple choice number of radius
-        selectInput("number", "select number of radius to compare", c(1:6), width= 200),
-        conditionalPanel(
-          condition = "input.number == 1",
-          sliderInput("n_1","Select Radius", min=25, max = 700, step = 25, value= 50)
-        ), 
-        conditionalPanel(
-          condition = "input.number == 2",
-          sliderInput("n_1_2","Select Radius", min=25, max = 700, step = 25, value= 50),
-          sliderInput("n_2","Select Radius", min=0, max = 700, step = 25, value=100)
-        ),
-        conditionalPanel(
-          condition = "input.number == 3",
-          sliderInput("n_1_3","Select Radius", min=25, max = 700, step = 25, value= 50),
-          sliderInput("n_2_3","Select Radius", min=25, max = 700, step = 25, value= 100),
-          sliderInput("n_3","Select Radius", min=0, max = 700, step = 25, value= 200)
-        ),
-        conditionalPanel(
-          condition = "input.number == 4",
-          sliderInput("n_1_4","Select Radius", min=25, max = 700, step = 25, value= 50),
-          sliderInput("n_2_4","Select Radius", min=25, max = 700, step = 25, value= 100),
-          sliderInput("n_3_4","Select Radius", min=0, max = 700, step = 25, value= 200),
-          sliderInput("n_4","Select Radius", min=0, max = 700, step = 25, value= 300)
-        ),
-        conditionalPanel(
-          condition = "input.number == 5",
-          sliderInput("n_1_5","Select Radius", min=25, max = 700, step = 25, value= 50),
-          sliderInput("n_2_5","Select Radius", min=25, max = 700, step = 25, value= 100),
-          sliderInput("n_3_5","Select Radius", min=0, max = 700, step = 25, value= 200),
-          sliderInput("n_4_5","Select Radius", min=0, max = 700, step = 25, value= 300),
-          sliderInput("n_5","Select Radius", min=0, max = 700, step = 25, value= 400)
-        ),
-        conditionalPanel(
-          condition = "input.number == 6",
-          sliderInput("n_1_6","Select Radius", min=25, max = 700, step = 25, value= 50),
-          sliderInput("n_2_6","Select Radius", min=25, max = 700, step = 25, value= 100),
-          sliderInput("n_3_6","Select Radius", min=0, max = 700, step = 25, value= 200),
-          sliderInput("n_4_6","Select Radius", min=0, max = 700, step = 25, value= 300),
-          sliderInput("n_5_6","Select Radius", min=0, max = 700, step = 25, value= 400),
-          sliderInput("n_6","Select Radius", min=0, max = 700, step = 25, value= 500)
-        ),
-        # Add user input to highlight cities and communities with a certain amount of affected vehicles (4.d)
-        sliderInput("anzahl", "Select a critical number to find all cities and communities with a certain amount of affected registered vehicles", min = 20, max = 300, value = 250)
-      ),
-      #Creating MainPanel with Tabsets
-      mainPanel(
-        #display logo
-        uiOutput("Logo", align="right"),
-        #Creating Tabsets 
-        tabsetPanel(
-          tabPanel("Map",leafletOutput("map") ),
-          
-          #display renderPlot
-          tabPanel("Barplot",plotOutput("barplot")),
-          
-          tabPanel("Table", dataTableOutput('datatable_rad')),
-          tabPanel("Basic Dataset", dataTableOutput('basic_dataset'))
-        )
-      )
-    )
+<!-- The Layout is divided into a sidebarPanel and a mainPanel. -->
 
-)
+<!-- The **sidebarPanel** contains adjustable inputs. -->
 
-```
+<!-- Since the user is supposed to be able to choose a number of radii, we used a selectInput. Here, the user can choose between 1 to 6 radii. -->
+<!-- Depending on the number of radii chosen, there has to be a variable number of inputSliders to choose the radius for each perimeter. Therefore, we added conditionalPanels depending on the given selectInput. -->
+<!-- We also added a sliderInput so that the user can assign a critical amount of affected vehicles. -->
 
-### Server
 
-In the server, various reactive functions are defined and data tables are manipulated to to be able to generate the requested visualizations.
+<!-- In the **mainPanel**, the outputs are displayed and it contains a logo, as demanded. -->
 
-#### The Map
+<!-- The mainPanel contains four tabPanels, i.e. a map, a barplot, a table, and the basic dataset to prove all visualisations. -->
 
-The **map** ist divided into the two groups *Clustered Markers* and *Cities of Interest*.
+<!-- ```{r user interface, warning = FALSE,message= FALSE} -->
 
-In the Clustered Markers group, the concentric perimeters around Hamburg are visualised. Cities and communities are clustered and the number of affected cars is being displayed.
+<!-- # Define UI -->
+<!-- ui <- fluidPage( -->
+<!--     #change font https://shiny.rstudio.com/articles/css.html -->
+<!--     tags$head( -->
+<!--       tags$style(HTML(" -->
+<!--         @import url('https://fonts.googleapis.com/css2?family=Anton&display=swap'); -->
 
-In the Cities of interest group, cities/communities are highlighted with a red marker if the critical number of affected vehicles specified by the user is reached or exceeded.
+<!--         h1 { -->
+<!--           font-family: 'Lucida Console', Courier, monospace; -->
+<!--           font-weight: 500; -->
+<!--           line-height: 1.1; -->
+<!--           color: #698b47; -->
+<!--         } -->
 
-![The Map](https://64.media.tumblr.com/10ae244a6f9a5f9a2c69524659e14354/df57ad3bf189a1a8-15/s2048x3072/d79336f13ef58e6c115fbc78dceb723035a2f17b.png)
+<!--       ")) -->
+<!--     ), -->
+<!--     # Application title -->
+<!--     headerPanel("Car Recall Action"), -->
+<!--     # Adding a theme -->
+<!--     theme = shinythemes::shinytheme('sandstone'), -->
+<!--     # How to change the color of slider inputs: https://www.rdocumentation.org/packages/shinyWidgets/versions/0.5.3/topics/setSliderColor -->
+<!--     setSliderColor(c("#698b47", "#698b47","#698b47","#698b47","#698b47", "#698b47", "#698b47","#698b47","#698b47","#698b47","#698b47", "#698b47","#698b47","#698b47","#698b47","#698b47", "#698b47","#698b47","#698b47","#698b47", "#698b47", "#698b47"), c(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22)), -->
+<!--     #Creating a sidebarLayout  -->
+<!--     sidebarLayout( -->
+<!--       #Creating Sidebar -->
+<!--       sidebarPanel( -->
+<!--       # Radius Input -->
+<!--         #selectInput("value", "Select Radius in km:", c(seq(25000, 700000, by=25000)), selected=50000, multiple=TRUE, width = 150),  -->
+<!--         #multiple choice number of radius -->
+<!--         selectInput("number", "select number of radius to compare", c(1:6), width= 200), -->
+<!--         conditionalPanel( -->
+<!--           condition = "input.number == 1", -->
+<!--           sliderInput("n_1","Select Radius", min=25, max = 700, step = 25, value= 50) -->
+<!--         ),  -->
+<!--         conditionalPanel( -->
+<!--           condition = "input.number == 2", -->
+<!--           sliderInput("n_1_2","Select Radius", min=25, max = 700, step = 25, value= 50), -->
+<!--           sliderInput("n_2","Select Radius", min=0, max = 700, step = 25, value=100) -->
+<!--         ), -->
+<!--         conditionalPanel( -->
+<!--           condition = "input.number == 3", -->
+<!--           sliderInput("n_1_3","Select Radius", min=25, max = 700, step = 25, value= 50), -->
+<!--           sliderInput("n_2_3","Select Radius", min=25, max = 700, step = 25, value= 100), -->
+<!--           sliderInput("n_3","Select Radius", min=0, max = 700, step = 25, value= 200) -->
+<!--         ), -->
+<!--         conditionalPanel( -->
+<!--           condition = "input.number == 4", -->
+<!--           sliderInput("n_1_4","Select Radius", min=25, max = 700, step = 25, value= 50), -->
+<!--           sliderInput("n_2_4","Select Radius", min=25, max = 700, step = 25, value= 100), -->
+<!--           sliderInput("n_3_4","Select Radius", min=0, max = 700, step = 25, value= 200), -->
+<!--           sliderInput("n_4","Select Radius", min=0, max = 700, step = 25, value= 300) -->
+<!--         ), -->
+<!--         conditionalPanel( -->
+<!--           condition = "input.number == 5", -->
+<!--           sliderInput("n_1_5","Select Radius", min=25, max = 700, step = 25, value= 50), -->
+<!--           sliderInput("n_2_5","Select Radius", min=25, max = 700, step = 25, value= 100), -->
+<!--           sliderInput("n_3_5","Select Radius", min=0, max = 700, step = 25, value= 200), -->
+<!--           sliderInput("n_4_5","Select Radius", min=0, max = 700, step = 25, value= 300), -->
+<!--           sliderInput("n_5","Select Radius", min=0, max = 700, step = 25, value= 400) -->
+<!--         ), -->
+<!--         conditionalPanel( -->
+<!--           condition = "input.number == 6", -->
+<!--           sliderInput("n_1_6","Select Radius", min=25, max = 700, step = 25, value= 50), -->
+<!--           sliderInput("n_2_6","Select Radius", min=25, max = 700, step = 25, value= 100), -->
+<!--           sliderInput("n_3_6","Select Radius", min=0, max = 700, step = 25, value= 200), -->
+<!--           sliderInput("n_4_6","Select Radius", min=0, max = 700, step = 25, value= 300), -->
+<!--           sliderInput("n_5_6","Select Radius", min=0, max = 700, step = 25, value= 400), -->
+<!--           sliderInput("n_6","Select Radius", min=0, max = 700, step = 25, value= 500) -->
+<!--         ), -->
+<!--         # Add user input to highlight cities and communities with a certain amount of affected vehicles (4.d) -->
+<!--         sliderInput("anzahl", "Select a critical number to find all cities and communities with a certain amount of affected registered vehicles", min = 20, max = 300, value = 250) -->
+<!--       ), -->
+<!--       #Creating MainPanel with Tabsets -->
+<!--       mainPanel( -->
+<!--         #display logo -->
+<!--         uiOutput("Logo", align="right"), -->
+<!--         #Creating Tabsets  -->
+<!--         tabsetPanel( -->
+<!--           tabPanel("Map",leafletOutput("map") ), -->
 
-[comment]: <> (![Clustered Markers]( URL HIER))
+<!--           #display renderPlot -->
+<!--           tabPanel("Barplot",plotOutput("barplot")), -->
 
-[comment]: <> (![Cities of Interest, critical amount = 300 cars]( URL HIER))
+<!--           tabPanel("Table", dataTableOutput('datatable_rad')), -->
+<!--           tabPanel("Basic Dataset", dataTableOutput('basic_dataset')) -->
+<!--         ) -->
+<!--       ) -->
+<!--     ) -->
 
-```{r server, warning = FALSE,message= FALSE}
+<!-- ) -->
 
-server <- function(input, output, session) {
-    
-    #image from URL https://stackoverflow.com/questions/45709189/renderimage-from-url-and-clickable
-    output$Logo <- renderUI({
-        # Return a list containining the filename
-        imgur1 <- "https://www.qw.tu-berlin.de/fileadmin/_processed_/8/8d/csm_QW_ohne_Text_print_a4670877cd.jpg"
-        tags$img(src = imgur1, width=80, height=65)    
-    })
-    
-    
-    #catch default values 
-    #https://stackoverflow.com/questions/33662033/shiny-how-to-make-reactive-value-initialize-with-default-value#38565508
-    defaults <- isolate(as.integer(c(input$n_1,input$n_2,input$n_3,input$n_4,input$n_5,input$n_6)))
+<!-- ``` -->
 
-    # Make a reactive Radius
-    distanz <- reactive({
-      test%>%
-        filter(test$dist <= as.numeric(max(as.integer(c(input$n_1,input$n_2,input$n_3,input$n_4,input$n_5,input$n_6))*1000)))
-    })
-    
-    #prepare dataset for cities of Interest 
-    #Nur Filter darf reaktiv sein !!!!!!!!!!!!!!!!
-    cities_amount <- test%>%
-      count(Ort)%>%
-      left_join(subset(distinct(test, Ort, .keep_all=TRUE), select=c(Ort, Laengengrad, Breitengrad)),by="Ort")
-    anzahl <- reactive({
-        filter(cities_amount, n>=input$anzahl)
-    })
-    
-    observe(print(anzahl()))
+<!-- ### Server -->
 
-    #map output 
-    output$map <- renderLeaflet({
-      #golden marker for hamburg
-      #sources: https://github.com/pointhi/leaflet-color-markers; https://rstudio.github.io/leaflet/markers.html
-      hamburg_marker <- makeIcon(
-        iconUrl = "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-gold.png",
-        iconWidth = 25, iconHeight = 41,
-        iconAnchorX = 25/2, iconAnchorY = 41
-      )
-      
-      auto_marker <- makeIcon(
-        iconUrl = "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png",
-        iconWidth = 15, iconHeight = 25,
-        iconAnchorX = 15/2, iconAnchorY = 25
-      )
-      
-      #draw the map and add markers
-      # See: https://stackoverflow.com/questions/40861908/shiny-r-implement-slider-input
-      distanz <- distanz()
-        my_map <- leaflet(distanz)%>%
-        
-        addTiles()%>%
-        #Layer 1 Cluster Anzeige 
-        # https://rstudio.github.io/leaflet/markers.html  
-        addMarkers(lng=~Laengengrad, 
-                   lat=~Breitengrad,
-                   group="Clustered Markers", 
-                   clusterOptions = markerClusterOptions(),
-                   label=~paste("ID_Fahrzeug: ",
-                                as.character(ID_Fahrzeug),
-                                "\n",
-                                "Produktionsdatum: ",
-                                (Produktionsdatum),
-                                "\n",
-                                "Dist",
-                                (dist))
-                   )%>%
-        #Adds Radius/ Circle arround Hamburg to the map
-        addMarkers(lng=9.993682, lat=53.551085, icon=hamburg_marker)
-        
-        
-        rad <- as.integer(c(input$n_1,input$n_2,input$n_3,input$n_4,input$n_5,input$n_6))*1000
-        rad_frame <- data.frame(rad, "index"=c(1:6))
-        #Color platte for coloring circles with different radius
-        #https://rstudio.github.io/leaflet/colors.html
-        #https://cfss.uchicago.edu/notes/leaflet/
-        pal <- colorFactor("Dark2", rad_frame$index)
-        my_map <- addCircles(map=my_map, data=rad_frame, lng=9.993682, lat=53.551085,radius = ~rad, fillOpacity = 0.02, color = ~pal(rad_frame$index), fillColor = ~pal(rad_frame$index))
-        
-        #Layer 2 Cities of Interest 
-        my_map <- addMarkers(map=my_map, data = anzahl (),
-                  lng=~Laengengrad,
-                  lat=~Breitengrad,
-                  group="Cities of Interest",
-                  icon = auto_marker
-                   )
-        #Add map controls for different groups/Layers 
-        my_map <- addLayersControl(map=my_map, overlayGroups = c("Clustered Markers","Cities of Interest"),options = layersControlOptions(collapsed = FALSE))
-    })
-    
-    #Save selected Layers 
-    #https://stackoverflow.com/questions/41468538/is-it-possible-to-access-r-leaflet-layer-controls-in-shiny-outside-of-leaflet
-    selected_groups <- reactive ({
-      groups_sel <- input$map_groups
-      groups_sel
-    })
-    
-    
-    #Change values on Number of Radius
-    observe({
-      if (input$number==1){
-        # When radius 1 is set, it is also saved for when there is more than one radius but is still adjustable
-        updateSliderInput(session,"n_1_2", value= input$n_1)
-        updateSliderInput(session,"n_1_3", value= input$n_1)
-        updateSliderInput(session,"n_1_4", value= input$n_1)
-        updateSliderInput(session,"n_1_5", value= input$n_1)
-        updateSliderInput(session,"n_1_6", value= input$n_1)
-        # All radii that are not needed are set to 0
-        updateSliderInput(session,"n_2", value= 0)
-        updateSliderInput(session,"n_3", value= 0)
-        updateSliderInput(session,"n_4", value= 0)
-        updateSliderInput(session,"n_5", value= 0)
-        updateSliderInput(session,"n_6", value= 0)
-      }
-      if(input$number==2){  
-        val1 <- input$n_1_2
-        # When radius 1 is adjusted, it is also saved for the other numbers of radii
-        updateSliderInput(session,"n_1_3", value= val1)
-        updateSliderInput(session,"n_1_4", value= val1)
-        updateSliderInput(session,"n_1_5", value= val1)
-        updateSliderInput(session,"n_1_6", value= val1)
-        # When radius 2 is set, it is also saved for when there is more than two radii but is still adjustable
-        updateSliderInput(session,"n_2_3", value= input$n_2)
-        updateSliderInput(session,"n_2_4", value= input$n_2)
-        updateSliderInput(session,"n_2_5", value= input$n_2)
-        updateSliderInput(session,"n_2_6", value= input$n_2)
-        # All radii that are not needed are set to 0
-        updateSliderInput(session,"n_1", value= val1)
-        #updateSliderInput(session,"n_2", value= defaults[2])
-        updateSliderInput(session,"n_3", value= 0)
-        updateSliderInput(session,"n_4", value= 0)
-        updateSliderInput(session,"n_5", value= 0)
-        updateSliderInput(session,"n_6", value= 0)
-      }
-      if(input$number==3){
-        val1 <- input$n_1_3
-        val2 <- input$n_2_3
-        
-        #The inputs are adjusted according to the pattern above
-        updateSliderInput(session,"n_1_4", value= val1)
-        updateSliderInput(session,"n_1_5", value= val1)
-        updateSliderInput(session,"n_1_6", value= val1)
-        
-        updateSliderInput(session,"n_2_4", value= val2)
-        updateSliderInput(session,"n_2_5", value= val2)
-        updateSliderInput(session,"n_2_6", value= val2)
-        
-        updateSliderInput(session,"n_3_4", value= input$n_3)
-        updateSliderInput(session,"n_3_5", value= input$n_3)
-        updateSliderInput(session,"n_3_6", value= input$n_3)
-        
-        updateSliderInput(session,"n_1", value= val1)
-        updateSliderInput(session,"n_2", value= val2)
-        #updateSliderInput(session,"n_3", value= defaults[3])
-        updateSliderInput(session,"n_4", value= 0)
-        updateSliderInput(session,"n_5", value= 0)
-        updateSliderInput(session,"n_6", value= 0)
-      }
-      if(input$number==4){
-        val1 <- input$n_1_4
-        val2 <- input$n_2_4
-        val3 <- input$n_3_4
-        
-        #The inputs are adjusted according to the pattern above
-        updateSliderInput(session,"n_1_5", value= val1)
-        updateSliderInput(session,"n_1_6", value= val1)
-        
-        updateSliderInput(session,"n_2_5", value= val2)
-        updateSliderInput(session,"n_2_6", value= val2)
-        
-        updateSliderInput(session,"n_3_5", value= val3)
-        updateSliderInput(session,"n_3_6", value= val3)
-        
-        updateSliderInput(session,"n_4_5", value= input$n_4)
-        updateSliderInput(session,"n_4_6", value= input$n_4)
-        
-        updateSliderInput(session,"n_1", value= val1)
-        updateSliderInput(session,"n_2", value= val2)
-        updateSliderInput(session,"n_3", value= val3)
-        #updateSliderInput(session,"n_4", value= defaults[4])
-        updateSliderInput(session,"n_5", value= 0)
-        updateSliderInput(session,"n_6", value= 0)
-      }
-      if(input$number==5){
-        val1 <- input$n_1_5
-        val2 <- input$n_2_5
-        val3 <- input$n_3_5
-        val4 <- input$n_4_5
-        
-        #The inputs are adjusted according to the pattern above
-        updateSliderInput(session,"n_1_6", value= val1)
+<!-- In the server, various reactive functions are defined and data tables are manipulated to to be able to generate the requested visualizations. -->
 
-        updateSliderInput(session,"n_2_6", value= val2)
-        
-        updateSliderInput(session,"n_3_6", value= val3)
-        
-        updateSliderInput(session,"n_4_6", value= val4)
-        
-        updateSliderInput(session,"n_5_6", value= input$n_5)
-        
-        updateSliderInput(session,"n_1", value= val1)
-        updateSliderInput(session,"n_2", value= val2)
-        updateSliderInput(session,"n_3", value= val3)
-        updateSliderInput(session,"n_4", value= val4)
-        #updateSliderInput(session,"n_5", value= defaults[5])
-        updateSliderInput(session,"n_6", value= 0)
-      }
-      if(input$number==6){
-        val1 <- input$n_1_6
-        val2 <- input$n_2_6
-        val3 <- input$n_3_6
-        val4 <- input$n_4_6
-        val5 <- input$n_5_6
-        updateSliderInput(session,"n_1", value= val1)
-        updateSliderInput(session,"n_2", value= val2)
-        updateSliderInput(session,"n_3", value= val3)
-        updateSliderInput(session,"n_4", value= val4)
-        updateSliderInput(session,"n_5", value= val5)
-        #updateSliderInput(session,"n_6", value= defaults[6])
-      }
-    })
-    
-    #Prepare Dataset due to max radius, only keep necessary info 
-    get_basic_dataset <- reactive({
-      basic_rad <- distanz()%>%
-        select(Bundesland, dist)
-      basic_rad
-    })
-    
-    
-    inputvector <- reactive ({
-      input_vector <- as.numeric(c(input$n_1,input$n_2,input$n_3,input$n_4,input$n_5,input$n_6))*1000
-      input_vector
-    })
-    
-    #add observations for all selected radius
-    get_dataset_all <- reactive({
-      n_1_filtered <- filter(get_basic_dataset(), dist <= inputvector()[1])%>%
-        group_by(Bundesland)%>%
-        summarise(Radius_1 = n())%>%
-        arrange(desc(Radius_1))%>%
-        ungroup()
-      n_2_filtered <- filter(get_basic_dataset(), dist <= inputvector()[2])%>%
-        group_by(Bundesland)%>%
-        summarise(Radius_2 = n())%>%
-        arrange(desc(Radius_2))%>%
-        ungroup()
-      n_3_filtered <- filter(get_basic_dataset(), dist <= inputvector()[3])%>%
-        group_by(Bundesland)%>%
-        summarise(Radius_3 = n())%>%
-        arrange(desc(Radius_3))%>%
-        ungroup()
-      n_4_filtered <- filter(get_basic_dataset(), dist <= inputvector()[4])%>%
-        group_by(Bundesland)%>%
-        summarise(Radius_4 = n())%>%
-        arrange(desc(Radius_4))%>%
-        ungroup()
-      n_5_filtered <- filter(get_basic_dataset(), dist <= inputvector()[5])%>%
-        group_by(Bundesland)%>%
-        summarise(Radius_5 = n())%>%
-        arrange(desc(Radius_5))%>%
-        ungroup()
-      n_6_filtered <- filter(get_basic_dataset(), dist <= inputvector()[6])%>%
-        group_by(Bundesland)%>%
-        summarise(Radius_6 = n())%>%
-        arrange(desc(Radius_6))%>%
-        ungroup()
-      final_rad_all <- list(n_1_filtered,n_2_filtered,n_3_filtered,n_4_filtered,n_5_filtered,n_6_filtered)%>%
-        #https://stackoverflow.com/questions/8091303/simultaneously-merge-multiple-data-frames-in-a-list#34393416
-        reduce(full_join, by="Bundesland")%>%
-        #https://rdrr.io/cran/janitor/man/remove_empty.html
-        remove_empty("cols")
-        #fill with "0's"
-        final_rad_all[-1][is.na(final_rad_all[-1])]<-0
-        #https://stackoverflow.com/questions/16363922/convert-a-vector-into-a-list-each-element-in-the-vector-as-an-element-in-the-li
-        sum_1 <- list(Bundesland="Sum")
-        sum_2 <- as.list(colSums(final_rad_all[-1]))
-        sums <- c(sum_1,sum_2)
-        #https://stackoverflow.com/questions/28467068/how-can-a-add-a-row-to-a-data-frame-in-r
-        final_rad_all[nrow(final_rad_all)+1,]=sums
-        #https://stackoverflow.com/questions/11036989/replace-all-0-values-to-na
-        final_rad_all[final_rad_all==0]<- NA
-      final_rad_all
-    })
+<!-- #### The Map -->
 
-    output$datatable_rad <- renderDataTable({
-      datatable(
-        # Disable pagination: https://shiny.rstudio.com/gallery/datatables-options.html
-        # Disable sorting: https://stackoverflow.com/questions/37848626/suppressing-sorting-in-datatables-in-shiny/37852445
-        options = list(paging = FALSE, ordering = FALSE),
-        # Disable numbering of the rows: https://stackoverflow.com/questions/55229736/how-to-remove-the-first-column-index-from-data-table-in-r-shiny
-        rownames = FALSE,
-        get_dataset_all()%>%
-          rename("State" = Bundesland)
-        )%>%
-        # How to highlight the row "Sum": https://rstudio.github.io/DT/010-style.html
-        formatStyle(
-          'State',
-          target = 'row',
-          backgroundColor = styleEqual("Sum", "#698b47"),
-          color = styleEqual("Sum", "white")
-        )
-    })
-    
-    #Basic Datatable to prove visualisations
-    output$basic_dataset <- renderDataTable({
-      datatable(rownames = FALSE,
-                test %>%
-                  mutate(dist_zu_ham = dist/1000)%>%
-                  select(Ort, Bundesland, Laengengrad, Breitengrad, dist_zu_ham, ID_Fahrzeug, Produktionsdatum, Zulassung)%>%
-                  rename("City/Community" = Ort, State = Bundesland, Longitude = Laengengrad, Latitude = Breitengrad, "Distance to Hamburg in km" = dist_zu_ham, "Vehicle ID" = ID_Fahrzeug, "Production Date" = Produktionsdatum, "Registration Date" = Zulassung)
-                )
-    })
+<!-- The **map** ist divided into the two groups *Clustered Markers* and *Cities of Interest*. -->
 
-    #barplot output
-    
-    #for advanced barplotting 
-    get_plot_dataset_advanced <- reactive({
-      final_rad_all_plot_advanced <- get_basic_dataset()
-      inputvector_sorted <- as.integer(inputvector())
-      names(inputvector_sorted)=c(1:6)
-      inputvector_sorted <- sort(inputvector_sorted,decreasing = FALSE)
-      inputvector_sorted[inputvector_sorted==0]<-NA
-      inputvector_sorted<-inputvector_sorted[!is.na(inputvector_sorted)]
-      #Problem wenn zwei oder mehrere Radien komplett gleich sind-> custom error message
-      #https://www.sitepoint.com/shiny-and-r-how-to-add-themes-and-customize-error-messages/
-      a <- if(TRUE %in% duplicated(inputvector_sorted)){FALSE}else{TRUE}
-      validate(
-       need(a !=FALSE, 
-        "All set Radius must be set unique, please change your input"
-         )
-      )
-      final_rad_all_plot_advanced$Radius <- cut(final_rad_all_plot_advanced$dist, c(0,inputvector_sorted),labels=names(inputvector_sorted))
-      final_rad_all_plot_advanced
-    })
-    
-    #factor for every single radius 
-    # Radius 1 always on the left-hand side and radius 6 always on the right-hand side --> sorting 
-    # accumulated cases
-    # filled by Bundesland
-    # 
-    get_plot_dataset_advanced_factor <- reactive({
-      inputvector_import <- as.integer(inputvector())
-      names(inputvector_import)=c(1:6)
-      #Sort Vector (not needed for now)
-      #inputvector_sorted <- sort(inputvector_sorted,decreasing = FALSE)
-      inputvector_sorted <- inputvector_import
-      inputvector_sorted[inputvector_sorted==0]<-NA
-      inputvector_sorted <- inputvector_sorted[!is.na(inputvector_sorted)]
-      #Get dataset 
-      final_rad_all_plot_advanced_factor <- get_basic_dataset()
-      
-      
-      if(input$number == 1|2|3|4|5|6){
-        if(inputvector_import["1"]!=0){
-          final_rad_all_plot_advanced_factor$Radius1 <- as.logical(cut(final_rad_all_plot_advanced_factor$dist, c(0,inputvector_sorted["1"]),labels=TRUE))
-          final_rad_all_plot_advanced_factor$Radius1[final_rad_all_plot_advanced_factor$Radius1==TRUE]<-1
-          #summarise to One row for every Bundesland
-          final_rad_all_plot_advanced_factor <- final_rad_all_plot_advanced_factor%>%
-            group_by(Radius1, Bundesland)%>%
-            #mutate(count_rad1 = sum(Radius1))%>%
-            #summarise(count_rad1 = n())%>%
-            ungroup()
-        }
-      }
-      
-      #Radius 2
-      if(input$number == 2|3|4|5|6){
-        if(inputvector_import["2"]!=0){
-          final_rad_all_plot_advanced_factor$Radius2 <- as.logical(cut(final_rad_all_plot_advanced_factor$dist, c(0,inputvector_sorted["2"]),labels=TRUE))
-          final_rad_all_plot_advanced_factor$Radius2[final_rad_all_plot_advanced_factor$Radius2==TRUE]<-2
-        }
-      }
-      # 
-      #Radius3
-      if(input$number == 3|4|5|6){
-        if(inputvector_import["3"]!=0){
-          final_rad_all_plot_advanced_factor$Radius3 <- as.logical(cut(final_rad_all_plot_advanced_factor$dist, c(0,inputvector_sorted["3"]),labels=TRUE))
-          final_rad_all_plot_advanced_factor$Radius3[final_rad_all_plot_advanced_factor$Radius3==TRUE]<-3
-        }
-      }
-      
-      #Radius4
-      if(input$number == 4|5|6){
-        if(inputvector_import["4"]!=0){
-          final_rad_all_plot_advanced_factor$Radius4 <- as.logical(cut(final_rad_all_plot_advanced_factor$dist, c(0,inputvector_sorted["4"]),labels=TRUE))
-          final_rad_all_plot_advanced_factor$Radius4[final_rad_all_plot_advanced_factor$Radius4==TRUE]<-4
-        }
-      }
-      
-      #Radius5
-      if(input$number == 5|6){
-        if(inputvector_import["5"]!=0){
-          final_rad_all_plot_advanced_factor$Radius5 <- as.logical(cut(final_rad_all_plot_advanced_factor$dist, c(0,inputvector_sorted["5"]),labels=TRUE))
-          final_rad_all_plot_advanced_factor$Radius5[final_rad_all_plot_advanced_factor$Radius5==TRUE]<-5
-        }
-      }
-      
-      #Radius6
-      if(input$number == 6){
-        if(inputvector_import["6"]!=0){
-          final_rad_all_plot_advanced_factor$Radius6 <- as.logical(cut(final_rad_all_plot_advanced_factor$dist, c(0,inputvector_sorted["6"]),labels=TRUE))
-          final_rad_all_plot_advanced_factor$Radius6[final_rad_all_plot_advanced_factor$Radius6==TRUE]<-6
-        }
-      }
-      
-      
-      final_rad_all_plot_advanced_factor
-    })
-    
-    
-    
-    #prepare dataset for plotting 
-    get_plot_dataset <- reactive({
-      final_rad_all_plot <- get_dataset_all()%>%
-        filter(Bundesland == "Sum")
-      name_cols <- colnames(final_rad_all_plot[-1])
-      print(name_cols)
-      #https://stackoverflow.com/questions/6778908/transpose-a-data-frame
-      final_rad_all_plot <- as.data.frame(t(final_rad_all_plot[,-1]))
-      colnames(final_rad_all_plot)<-"Anzahl"
-      #mutate(final_rad_all_plot, Namen=name_cols)
-      final_rad_all_plot$Namen <- name_cols
-      final_rad_all_plot
-    })
-    
-    
-    output$barplot <- renderPlot({
-      df1 <- get_plot_dataset_advanced()
-      df2 <- get_plot_dataset_advanced_factor()
-      p <- ggplot() +
-        # Changing labels to English, changing Plot Theme, source: https://stackoverflow.com/questions/23635662/editing-legend-text-labels-in-ggplot
-        labs(title = "Number of registered vehicles within each radius", x = "Radius Number", y = "Number of registered vehicles", fill = "State")+
-        theme(axis.text.x = element_text(size = 14), axis.title.x = element_text(size = 16, color = "#698b47"),
-              axis.text.y = element_text(size = 14), axis.title.y = element_text(size = 16, color = "#698b47"),
-              plot.title = element_text(size = 20, face = "bold", color = "#698b47"),
-              legend.title = element_text(size = 16, color = "#698b47"),
-              legend.text = element_text(size = 14))
-        #geom_bar(data=df1,aes(Radius, fill = Bundesland))
-        #if(Radius3 %in% colnames(df2)){geom_histogram(data = df2, aes(Radius))}
-      p = p+geom_histogram(data = subset(df2, Radius1 %in% c(1)),aes(Radius1, fill=Bundesland),stat="count")
-      if("Radius2" %in% colnames(df2)){p = p + geom_histogram(data = subset(df2, Radius2 %in% c(2)), aes(Radius2, fill=Bundesland),stat="count")}
-      if("Radius3" %in% colnames(df2)){p = p + geom_histogram(data = subset(df2, Radius3 %in% c(3)), aes(Radius3, fill=Bundesland),stat="count")}
-      if("Radius4" %in% colnames(df2)){p = p + geom_histogram(data = subset(df2, Radius4 %in% c(4)), aes(Radius4, fill=Bundesland),stat="count")}
-      if("Radius5" %in% colnames(df2)){p = p + geom_histogram(data = subset(df2, Radius5 %in% c(5)), aes(Radius5, fill=Bundesland),stat="count")}
-      if("Radius6" %in% colnames(df2)){p = p + geom_histogram(data = subset(df2, Radius6 %in% c(6)), aes(Radius6, fill=Bundesland),stat="count")}
-        #geom_histogram(data = df2,aes(Radius2, fill=Bundesland),stat="count")+ 
-      p
-    })
-    
-}
-```
+<!-- In the Clustered Markers group, the concentric perimeters around Hamburg are visualised. Cities and communities are clustered and the number of affected cars is being displayed. -->
+
+<!-- In the Cities of interest group, cities/communities are highlighted with a red marker if the critical number of affected vehicles specified by the user is reached or exceeded. -->
+
+<!-- ![The Map](https://64.media.tumblr.com/10ae244a6f9a5f9a2c69524659e14354/df57ad3bf189a1a8-15/s2048x3072/d79336f13ef58e6c115fbc78dceb723035a2f17b.png) -->
+
+<!-- [comment]: <> (![Clustered Markers]( URL HIER)) -->
+
+<!-- [comment]: <> (![Cities of Interest, critical amount = 300 cars]( URL HIER)) -->
+
+<!-- ```{r server, warning = FALSE,message= FALSE} -->
+
+<!-- server <- function(input, output, session) { -->
+
+<!--     #image from URL https://stackoverflow.com/questions/45709189/renderimage-from-url-and-clickable -->
+<!--     output$Logo <- renderUI({ -->
+<!--         # Return a list containining the filename -->
+<!--         imgur1 <- "https://www.qw.tu-berlin.de/fileadmin/_processed_/8/8d/csm_QW_ohne_Text_print_a4670877cd.jpg" -->
+<!--         tags$img(src = imgur1, width=80, height=65)     -->
+<!--     }) -->
+
+
+<!--     #catch default values  -->
+<!--     #https://stackoverflow.com/questions/33662033/shiny-how-to-make-reactive-value-initialize-with-default-value#38565508 -->
+<!--     defaults <- isolate(as.integer(c(input$n_1,input$n_2,input$n_3,input$n_4,input$n_5,input$n_6))) -->
+
+<!--     # Make a reactive Radius -->
+<!--     distanz <- reactive({ -->
+<!--       test%>% -->
+<!--         filter(test$dist <= as.numeric(max(as.integer(c(input$n_1,input$n_2,input$n_3,input$n_4,input$n_5,input$n_6))*1000))) -->
+<!--     }) -->
+
+<!--     #prepare dataset for cities of Interest  -->
+<!--     #Nur Filter darf reaktiv sein !!!!!!!!!!!!!!!! -->
+<!--     cities_amount <- test%>% -->
+<!--       count(Ort)%>% -->
+<!--       left_join(subset(distinct(test, Ort, .keep_all=TRUE), select=c(Ort, Laengengrad, Breitengrad)),by="Ort") -->
+<!--     anzahl <- reactive({ -->
+<!--         filter(cities_amount, n>=input$anzahl) -->
+<!--     }) -->
+
+<!--     observe(print(anzahl())) -->
+
+<!--     #map output  -->
+<!--     output$map <- renderLeaflet({ -->
+<!--       #golden marker for hamburg -->
+<!--       #sources: https://github.com/pointhi/leaflet-color-markers; https://rstudio.github.io/leaflet/markers.html -->
+<!--       hamburg_marker <- makeIcon( -->
+<!--         iconUrl = "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-gold.png", -->
+<!--         iconWidth = 25, iconHeight = 41, -->
+<!--         iconAnchorX = 25/2, iconAnchorY = 41 -->
+<!--       ) -->
+
+<!--       auto_marker <- makeIcon( -->
+<!--         iconUrl = "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png", -->
+<!--         iconWidth = 15, iconHeight = 25, -->
+<!--         iconAnchorX = 15/2, iconAnchorY = 25 -->
+<!--       ) -->
+
+<!--       #draw the map and add markers -->
+<!--       # See: https://stackoverflow.com/questions/40861908/shiny-r-implement-slider-input -->
+<!--       distanz <- distanz() -->
+<!--         my_map <- leaflet(distanz)%>% -->
+
+<!--         addTiles()%>% -->
+<!--         #Layer 1 Cluster Anzeige  -->
+<!--         # https://rstudio.github.io/leaflet/markers.html   -->
+<!--         addMarkers(lng=~Laengengrad,  -->
+<!--                    lat=~Breitengrad, -->
+<!--                    group="Clustered Markers",  -->
+<!--                    clusterOptions = markerClusterOptions(), -->
+<!--                    label=~paste("ID_Fahrzeug: ", -->
+<!--                                 as.character(ID_Fahrzeug), -->
+<!--                                 "\n", -->
+<!--                                 "Produktionsdatum: ", -->
+<!--                                 (Produktionsdatum), -->
+<!--                                 "\n", -->
+<!--                                 "Dist", -->
+<!--                                 (dist)) -->
+<!--                    )%>% -->
+<!--         #Adds Radius/ Circle arround Hamburg to the map -->
+<!--         addMarkers(lng=9.993682, lat=53.551085, icon=hamburg_marker) -->
+
+
+<!--         rad <- as.integer(c(input$n_1,input$n_2,input$n_3,input$n_4,input$n_5,input$n_6))*1000 -->
+<!--         rad_frame <- data.frame(rad, "index"=c(1:6)) -->
+<!--         #Color platte for coloring circles with different radius -->
+<!--         #https://rstudio.github.io/leaflet/colors.html -->
+<!--         #https://cfss.uchicago.edu/notes/leaflet/ -->
+<!--         pal <- colorFactor("Dark2", rad_frame$index) -->
+<!--         my_map <- addCircles(map=my_map, data=rad_frame, lng=9.993682, lat=53.551085,radius = ~rad, fillOpacity = 0.02, color = ~pal(rad_frame$index), fillColor = ~pal(rad_frame$index)) -->
+
+<!--         #Layer 2 Cities of Interest  -->
+<!--         my_map <- addMarkers(map=my_map, data = anzahl (), -->
+<!--                   lng=~Laengengrad, -->
+<!--                   lat=~Breitengrad, -->
+<!--                   group="Cities of Interest", -->
+<!--                   icon = auto_marker -->
+<!--                    ) -->
+<!--         #Add map controls for different groups/Layers  -->
+<!--         my_map <- addLayersControl(map=my_map, overlayGroups = c("Clustered Markers","Cities of Interest"),options = layersControlOptions(collapsed = FALSE)) -->
+<!--     }) -->
+
+<!--     #Save selected Layers  -->
+<!--     #https://stackoverflow.com/questions/41468538/is-it-possible-to-access-r-leaflet-layer-controls-in-shiny-outside-of-leaflet -->
+<!--     selected_groups <- reactive ({ -->
+<!--       groups_sel <- input$map_groups -->
+<!--       groups_sel -->
+<!--     }) -->
+
+
+<!--     #Change values on Number of Radius -->
+<!--     observe({ -->
+<!--       if (input$number==1){ -->
+<!--         # When radius 1 is set, it is also saved for when there is more than one radius but is still adjustable -->
+<!--         updateSliderInput(session,"n_1_2", value= input$n_1) -->
+<!--         updateSliderInput(session,"n_1_3", value= input$n_1) -->
+<!--         updateSliderInput(session,"n_1_4", value= input$n_1) -->
+<!--         updateSliderInput(session,"n_1_5", value= input$n_1) -->
+<!--         updateSliderInput(session,"n_1_6", value= input$n_1) -->
+<!--         # All radii that are not needed are set to 0 -->
+<!--         updateSliderInput(session,"n_2", value= 0) -->
+<!--         updateSliderInput(session,"n_3", value= 0) -->
+<!--         updateSliderInput(session,"n_4", value= 0) -->
+<!--         updateSliderInput(session,"n_5", value= 0) -->
+<!--         updateSliderInput(session,"n_6", value= 0) -->
+<!--       } -->
+<!--       if(input$number==2){   -->
+<!--         val1 <- input$n_1_2 -->
+<!--         # When radius 1 is adjusted, it is also saved for the other numbers of radii -->
+<!--         updateSliderInput(session,"n_1_3", value= val1) -->
+<!--         updateSliderInput(session,"n_1_4", value= val1) -->
+<!--         updateSliderInput(session,"n_1_5", value= val1) -->
+<!--         updateSliderInput(session,"n_1_6", value= val1) -->
+<!--         # When radius 2 is set, it is also saved for when there is more than two radii but is still adjustable -->
+<!--         updateSliderInput(session,"n_2_3", value= input$n_2) -->
+<!--         updateSliderInput(session,"n_2_4", value= input$n_2) -->
+<!--         updateSliderInput(session,"n_2_5", value= input$n_2) -->
+<!--         updateSliderInput(session,"n_2_6", value= input$n_2) -->
+<!--         # All radii that are not needed are set to 0 -->
+<!--         updateSliderInput(session,"n_1", value= val1) -->
+<!--         #updateSliderInput(session,"n_2", value= defaults[2]) -->
+<!--         updateSliderInput(session,"n_3", value= 0) -->
+<!--         updateSliderInput(session,"n_4", value= 0) -->
+<!--         updateSliderInput(session,"n_5", value= 0) -->
+<!--         updateSliderInput(session,"n_6", value= 0) -->
+<!--       } -->
+<!--       if(input$number==3){ -->
+<!--         val1 <- input$n_1_3 -->
+<!--         val2 <- input$n_2_3 -->
+
+<!--         #The inputs are adjusted according to the pattern above -->
+<!--         updateSliderInput(session,"n_1_4", value= val1) -->
+<!--         updateSliderInput(session,"n_1_5", value= val1) -->
+<!--         updateSliderInput(session,"n_1_6", value= val1) -->
+
+<!--         updateSliderInput(session,"n_2_4", value= val2) -->
+<!--         updateSliderInput(session,"n_2_5", value= val2) -->
+<!--         updateSliderInput(session,"n_2_6", value= val2) -->
+
+<!--         updateSliderInput(session,"n_3_4", value= input$n_3) -->
+<!--         updateSliderInput(session,"n_3_5", value= input$n_3) -->
+<!--         updateSliderInput(session,"n_3_6", value= input$n_3) -->
+
+<!--         updateSliderInput(session,"n_1", value= val1) -->
+<!--         updateSliderInput(session,"n_2", value= val2) -->
+<!--         #updateSliderInput(session,"n_3", value= defaults[3]) -->
+<!--         updateSliderInput(session,"n_4", value= 0) -->
+<!--         updateSliderInput(session,"n_5", value= 0) -->
+<!--         updateSliderInput(session,"n_6", value= 0) -->
+<!--       } -->
+<!--       if(input$number==4){ -->
+<!--         val1 <- input$n_1_4 -->
+<!--         val2 <- input$n_2_4 -->
+<!--         val3 <- input$n_3_4 -->
+
+<!--         #The inputs are adjusted according to the pattern above -->
+<!--         updateSliderInput(session,"n_1_5", value= val1) -->
+<!--         updateSliderInput(session,"n_1_6", value= val1) -->
+
+<!--         updateSliderInput(session,"n_2_5", value= val2) -->
+<!--         updateSliderInput(session,"n_2_6", value= val2) -->
+
+<!--         updateSliderInput(session,"n_3_5", value= val3) -->
+<!--         updateSliderInput(session,"n_3_6", value= val3) -->
+
+<!--         updateSliderInput(session,"n_4_5", value= input$n_4) -->
+<!--         updateSliderInput(session,"n_4_6", value= input$n_4) -->
+
+<!--         updateSliderInput(session,"n_1", value= val1) -->
+<!--         updateSliderInput(session,"n_2", value= val2) -->
+<!--         updateSliderInput(session,"n_3", value= val3) -->
+<!--         #updateSliderInput(session,"n_4", value= defaults[4]) -->
+<!--         updateSliderInput(session,"n_5", value= 0) -->
+<!--         updateSliderInput(session,"n_6", value= 0) -->
+<!--       } -->
+<!--       if(input$number==5){ -->
+<!--         val1 <- input$n_1_5 -->
+<!--         val2 <- input$n_2_5 -->
+<!--         val3 <- input$n_3_5 -->
+<!--         val4 <- input$n_4_5 -->
+
+<!--         #The inputs are adjusted according to the pattern above -->
+<!--         updateSliderInput(session,"n_1_6", value= val1) -->
+
+<!--         updateSliderInput(session,"n_2_6", value= val2) -->
+
+<!--         updateSliderInput(session,"n_3_6", value= val3) -->
+
+<!--         updateSliderInput(session,"n_4_6", value= val4) -->
+
+<!--         updateSliderInput(session,"n_5_6", value= input$n_5) -->
+
+<!--         updateSliderInput(session,"n_1", value= val1) -->
+<!--         updateSliderInput(session,"n_2", value= val2) -->
+<!--         updateSliderInput(session,"n_3", value= val3) -->
+<!--         updateSliderInput(session,"n_4", value= val4) -->
+<!--         #updateSliderInput(session,"n_5", value= defaults[5]) -->
+<!--         updateSliderInput(session,"n_6", value= 0) -->
+<!--       } -->
+<!--       if(input$number==6){ -->
+<!--         val1 <- input$n_1_6 -->
+<!--         val2 <- input$n_2_6 -->
+<!--         val3 <- input$n_3_6 -->
+<!--         val4 <- input$n_4_6 -->
+<!--         val5 <- input$n_5_6 -->
+<!--         updateSliderInput(session,"n_1", value= val1) -->
+<!--         updateSliderInput(session,"n_2", value= val2) -->
+<!--         updateSliderInput(session,"n_3", value= val3) -->
+<!--         updateSliderInput(session,"n_4", value= val4) -->
+<!--         updateSliderInput(session,"n_5", value= val5) -->
+<!--         #updateSliderInput(session,"n_6", value= defaults[6]) -->
+<!--       } -->
+<!--     }) -->
+
+<!--     #Prepare Dataset due to max radius, only keep necessary info  -->
+<!--     get_basic_dataset <- reactive({ -->
+<!--       basic_rad <- distanz()%>% -->
+<!--         select(Bundesland, dist) -->
+<!--       basic_rad -->
+<!--     }) -->
+
+
+<!--     inputvector <- reactive ({ -->
+<!--       input_vector <- as.numeric(c(input$n_1,input$n_2,input$n_3,input$n_4,input$n_5,input$n_6))*1000 -->
+<!--       input_vector -->
+<!--     }) -->
+
+<!--     #add observations for all selected radius -->
+<!--     get_dataset_all <- reactive({ -->
+<!--       n_1_filtered <- filter(get_basic_dataset(), dist <= inputvector()[1])%>% -->
+<!--         group_by(Bundesland)%>% -->
+<!--         summarise(Radius_1 = n())%>% -->
+<!--         arrange(desc(Radius_1))%>% -->
+<!--         ungroup() -->
+<!--       n_2_filtered <- filter(get_basic_dataset(), dist <= inputvector()[2])%>% -->
+<!--         group_by(Bundesland)%>% -->
+<!--         summarise(Radius_2 = n())%>% -->
+<!--         arrange(desc(Radius_2))%>% -->
+<!--         ungroup() -->
+<!--       n_3_filtered <- filter(get_basic_dataset(), dist <= inputvector()[3])%>% -->
+<!--         group_by(Bundesland)%>% -->
+<!--         summarise(Radius_3 = n())%>% -->
+<!--         arrange(desc(Radius_3))%>% -->
+<!--         ungroup() -->
+<!--       n_4_filtered <- filter(get_basic_dataset(), dist <= inputvector()[4])%>% -->
+<!--         group_by(Bundesland)%>% -->
+<!--         summarise(Radius_4 = n())%>% -->
+<!--         arrange(desc(Radius_4))%>% -->
+<!--         ungroup() -->
+<!--       n_5_filtered <- filter(get_basic_dataset(), dist <= inputvector()[5])%>% -->
+<!--         group_by(Bundesland)%>% -->
+<!--         summarise(Radius_5 = n())%>% -->
+<!--         arrange(desc(Radius_5))%>% -->
+<!--         ungroup() -->
+<!--       n_6_filtered <- filter(get_basic_dataset(), dist <= inputvector()[6])%>% -->
+<!--         group_by(Bundesland)%>% -->
+<!--         summarise(Radius_6 = n())%>% -->
+<!--         arrange(desc(Radius_6))%>% -->
+<!--         ungroup() -->
+<!--       final_rad_all <- list(n_1_filtered,n_2_filtered,n_3_filtered,n_4_filtered,n_5_filtered,n_6_filtered)%>% -->
+<!--         #https://stackoverflow.com/questions/8091303/simultaneously-merge-multiple-data-frames-in-a-list#34393416 -->
+<!--         reduce(full_join, by="Bundesland")%>% -->
+<!--         #https://rdrr.io/cran/janitor/man/remove_empty.html -->
+<!--         remove_empty("cols") -->
+<!--         #fill with "0's" -->
+<!--         final_rad_all[-1][is.na(final_rad_all[-1])]<-0 -->
+<!--         #https://stackoverflow.com/questions/16363922/convert-a-vector-into-a-list-each-element-in-the-vector-as-an-element-in-the-li -->
+<!--         sum_1 <- list(Bundesland="Sum") -->
+<!--         sum_2 <- as.list(colSums(final_rad_all[-1])) -->
+<!--         sums <- c(sum_1,sum_2) -->
+<!--         #https://stackoverflow.com/questions/28467068/how-can-a-add-a-row-to-a-data-frame-in-r -->
+<!--         final_rad_all[nrow(final_rad_all)+1,]=sums -->
+<!--         #https://stackoverflow.com/questions/11036989/replace-all-0-values-to-na -->
+<!--         final_rad_all[final_rad_all==0]<- NA -->
+<!--       final_rad_all -->
+<!--     }) -->
+
+<!--     output$datatable_rad <- renderDataTable({ -->
+<!--       datatable( -->
+<!--         # Disable pagination: https://shiny.rstudio.com/gallery/datatables-options.html -->
+<!--         # Disable sorting: https://stackoverflow.com/questions/37848626/suppressing-sorting-in-datatables-in-shiny/37852445 -->
+<!--         options = list(paging = FALSE, ordering = FALSE), -->
+<!--         # Disable numbering of the rows: https://stackoverflow.com/questions/55229736/how-to-remove-the-first-column-index-from-data-table-in-r-shiny -->
+<!--         rownames = FALSE, -->
+<!--         get_dataset_all()%>% -->
+<!--           rename("State" = Bundesland) -->
+<!--         )%>% -->
+<!--         # How to highlight the row "Sum": https://rstudio.github.io/DT/010-style.html -->
+<!--         formatStyle( -->
+<!--           'State', -->
+<!--           target = 'row', -->
+<!--           backgroundColor = styleEqual("Sum", "#698b47"), -->
+<!--           color = styleEqual("Sum", "white") -->
+<!--         ) -->
+<!--     }) -->
+
+<!--     #Basic Datatable to prove visualisations -->
+<!--     output$basic_dataset <- renderDataTable({ -->
+<!--       datatable(rownames = FALSE, -->
+<!--                 test %>% -->
+<!--                   mutate(dist_zu_ham = dist/1000)%>% -->
+<!--                   select(Ort, Bundesland, Laengengrad, Breitengrad, dist_zu_ham, ID_Fahrzeug, Produktionsdatum, Zulassung)%>% -->
+<!--                   rename("City/Community" = Ort, State = Bundesland, Longitude = Laengengrad, Latitude = Breitengrad, "Distance to Hamburg in km" = dist_zu_ham, "Vehicle ID" = ID_Fahrzeug, "Production Date" = Produktionsdatum, "Registration Date" = Zulassung) -->
+<!--                 ) -->
+<!--     }) -->
+
+<!--     #barplot output -->
+
+<!--     #for advanced barplotting  -->
+<!--     get_plot_dataset_advanced <- reactive({ -->
+<!--       final_rad_all_plot_advanced <- get_basic_dataset() -->
+<!--       inputvector_sorted <- as.integer(inputvector()) -->
+<!--       names(inputvector_sorted)=c(1:6) -->
+<!--       inputvector_sorted <- sort(inputvector_sorted,decreasing = FALSE) -->
+<!--       inputvector_sorted[inputvector_sorted==0]<-NA -->
+<!--       inputvector_sorted<-inputvector_sorted[!is.na(inputvector_sorted)] -->
+<!--       #Problem wenn zwei oder mehrere Radien komplett gleich sind-> custom error message -->
+<!--       #https://www.sitepoint.com/shiny-and-r-how-to-add-themes-and-customize-error-messages/ -->
+<!--       a <- if(TRUE %in% duplicated(inputvector_sorted)){FALSE}else{TRUE} -->
+<!--       validate( -->
+<!--        need(a !=FALSE,  -->
+<!--         "All set Radius must be set unique, please change your input" -->
+<!--          ) -->
+<!--       ) -->
+<!--       final_rad_all_plot_advanced$Radius <- cut(final_rad_all_plot_advanced$dist, c(0,inputvector_sorted),labels=names(inputvector_sorted)) -->
+<!--       final_rad_all_plot_advanced -->
+<!--     }) -->
+
+<!--     #factor for every single radius  -->
+<!--     # Radius 1 always on the left-hand side and radius 6 always on the right-hand side --> sorting  -->
+<!--     # accumulated cases -->
+<!--     # filled by Bundesland -->
+<!--     #  -->
+<!--     get_plot_dataset_advanced_factor <- reactive({ -->
+<!--       inputvector_import <- as.integer(inputvector()) -->
+<!--       names(inputvector_import)=c(1:6) -->
+<!--       #Sort Vector (not needed for now) -->
+<!--       #inputvector_sorted <- sort(inputvector_sorted,decreasing = FALSE) -->
+<!--       inputvector_sorted <- inputvector_import -->
+<!--       inputvector_sorted[inputvector_sorted==0]<-NA -->
+<!--       inputvector_sorted <- inputvector_sorted[!is.na(inputvector_sorted)] -->
+<!--       #Get dataset  -->
+<!--       final_rad_all_plot_advanced_factor <- get_basic_dataset() -->
+
+
+<!--       if(input$number == 1|2|3|4|5|6){ -->
+<!--         if(inputvector_import["1"]!=0){ -->
+<!--           final_rad_all_plot_advanced_factor$Radius1 <- as.logical(cut(final_rad_all_plot_advanced_factor$dist, c(0,inputvector_sorted["1"]),labels=TRUE)) -->
+<!--           final_rad_all_plot_advanced_factor$Radius1[final_rad_all_plot_advanced_factor$Radius1==TRUE]<-1 -->
+<!--           #summarise to One row for every Bundesland -->
+<!--           final_rad_all_plot_advanced_factor <- final_rad_all_plot_advanced_factor%>% -->
+<!--             group_by(Radius1, Bundesland)%>% -->
+<!--             #mutate(count_rad1 = sum(Radius1))%>% -->
+<!--             #summarise(count_rad1 = n())%>% -->
+<!--             ungroup() -->
+<!--         } -->
+<!--       } -->
+
+<!--       #Radius 2 -->
+<!--       if(input$number == 2|3|4|5|6){ -->
+<!--         if(inputvector_import["2"]!=0){ -->
+<!--           final_rad_all_plot_advanced_factor$Radius2 <- as.logical(cut(final_rad_all_plot_advanced_factor$dist, c(0,inputvector_sorted["2"]),labels=TRUE)) -->
+<!--           final_rad_all_plot_advanced_factor$Radius2[final_rad_all_plot_advanced_factor$Radius2==TRUE]<-2 -->
+<!--         } -->
+<!--       } -->
+<!--       #  -->
+<!--       #Radius3 -->
+<!--       if(input$number == 3|4|5|6){ -->
+<!--         if(inputvector_import["3"]!=0){ -->
+<!--           final_rad_all_plot_advanced_factor$Radius3 <- as.logical(cut(final_rad_all_plot_advanced_factor$dist, c(0,inputvector_sorted["3"]),labels=TRUE)) -->
+<!--           final_rad_all_plot_advanced_factor$Radius3[final_rad_all_plot_advanced_factor$Radius3==TRUE]<-3 -->
+<!--         } -->
+<!--       } -->
+
+<!--       #Radius4 -->
+<!--       if(input$number == 4|5|6){ -->
+<!--         if(inputvector_import["4"]!=0){ -->
+<!--           final_rad_all_plot_advanced_factor$Radius4 <- as.logical(cut(final_rad_all_plot_advanced_factor$dist, c(0,inputvector_sorted["4"]),labels=TRUE)) -->
+<!--           final_rad_all_plot_advanced_factor$Radius4[final_rad_all_plot_advanced_factor$Radius4==TRUE]<-4 -->
+<!--         } -->
+<!--       } -->
+
+<!--       #Radius5 -->
+<!--       if(input$number == 5|6){ -->
+<!--         if(inputvector_import["5"]!=0){ -->
+<!--           final_rad_all_plot_advanced_factor$Radius5 <- as.logical(cut(final_rad_all_plot_advanced_factor$dist, c(0,inputvector_sorted["5"]),labels=TRUE)) -->
+<!--           final_rad_all_plot_advanced_factor$Radius5[final_rad_all_plot_advanced_factor$Radius5==TRUE]<-5 -->
+<!--         } -->
+<!--       } -->
+
+<!--       #Radius6 -->
+<!--       if(input$number == 6){ -->
+<!--         if(inputvector_import["6"]!=0){ -->
+<!--           final_rad_all_plot_advanced_factor$Radius6 <- as.logical(cut(final_rad_all_plot_advanced_factor$dist, c(0,inputvector_sorted["6"]),labels=TRUE)) -->
+<!--           final_rad_all_plot_advanced_factor$Radius6[final_rad_all_plot_advanced_factor$Radius6==TRUE]<-6 -->
+<!--         } -->
+<!--       } -->
+
+
+<!--       final_rad_all_plot_advanced_factor -->
+<!--     }) -->
+
+
+
+<!--     #prepare dataset for plotting  -->
+<!--     get_plot_dataset <- reactive({ -->
+<!--       final_rad_all_plot <- get_dataset_all()%>% -->
+<!--         filter(Bundesland == "Sum") -->
+<!--       name_cols <- colnames(final_rad_all_plot[-1]) -->
+<!--       print(name_cols) -->
+<!--       #https://stackoverflow.com/questions/6778908/transpose-a-data-frame -->
+<!--       final_rad_all_plot <- as.data.frame(t(final_rad_all_plot[,-1])) -->
+<!--       colnames(final_rad_all_plot)<-"Anzahl" -->
+<!--       #mutate(final_rad_all_plot, Namen=name_cols) -->
+<!--       final_rad_all_plot$Namen <- name_cols -->
+<!--       final_rad_all_plot -->
+<!--     }) -->
+
+
+<!--     output$barplot <- renderPlot({ -->
+<!--       df1 <- get_plot_dataset_advanced() -->
+<!--       df2 <- get_plot_dataset_advanced_factor() -->
+<!--       p <- ggplot() + -->
+<!--         # Changing labels to English, changing Plot Theme, source: https://stackoverflow.com/questions/23635662/editing-legend-text-labels-in-ggplot -->
+<!--         labs(title = "Number of registered vehicles within each radius", x = "Radius Number", y = "Number of registered vehicles", fill = "State")+ -->
+<!--         theme(axis.text.x = element_text(size = 14), axis.title.x = element_text(size = 16, color = "#698b47"), -->
+<!--               axis.text.y = element_text(size = 14), axis.title.y = element_text(size = 16, color = "#698b47"), -->
+<!--               plot.title = element_text(size = 20, face = "bold", color = "#698b47"), -->
+<!--               legend.title = element_text(size = 16, color = "#698b47"), -->
+<!--               legend.text = element_text(size = 14)) -->
+<!--         #geom_bar(data=df1,aes(Radius, fill = Bundesland)) -->
+<!--         #if(Radius3 %in% colnames(df2)){geom_histogram(data = df2, aes(Radius))} -->
+<!--       p = p+geom_histogram(data = subset(df2, Radius1 %in% c(1)),aes(Radius1, fill=Bundesland),stat="count") -->
+<!--       if("Radius2" %in% colnames(df2)){p = p + geom_histogram(data = subset(df2, Radius2 %in% c(2)), aes(Radius2, fill=Bundesland),stat="count")} -->
+<!--       if("Radius3" %in% colnames(df2)){p = p + geom_histogram(data = subset(df2, Radius3 %in% c(3)), aes(Radius3, fill=Bundesland),stat="count")} -->
+<!--       if("Radius4" %in% colnames(df2)){p = p + geom_histogram(data = subset(df2, Radius4 %in% c(4)), aes(Radius4, fill=Bundesland),stat="count")} -->
+<!--       if("Radius5" %in% colnames(df2)){p = p + geom_histogram(data = subset(df2, Radius5 %in% c(5)), aes(Radius5, fill=Bundesland),stat="count")} -->
+<!--       if("Radius6" %in% colnames(df2)){p = p + geom_histogram(data = subset(df2, Radius6 %in% c(6)), aes(Radius6, fill=Bundesland),stat="count")} -->
+<!--         #geom_histogram(data = df2,aes(Radius2, fill=Bundesland),stat="count")+  -->
+<!--       p -->
+<!--     }) -->
+
+<!-- } -->
+<!-- ``` -->
 
