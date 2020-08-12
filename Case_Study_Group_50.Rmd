@@ -10,10 +10,6 @@ output:
     toc: yes
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
-
 # Introduction
 
 The intention of this project is to find vehicles of "Type11" and "Type12" which have installed the faulty diesel engine "K1DI1". The defective engines were produced from 1 March 2008 to 11 May 2012.  The recall action will start in the Hamburg area, as the first diesel bans come into force there. 
@@ -28,6 +24,9 @@ if(!require("install.load")){
 library(install.load)
 
 install_load("readr", "tidyverse", "stringr", "readxl","ggplot2", "plotly","lubridate", "data.table","tm","geosphere","sp","knitr")
+```
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
 ```
 
 # Data Import
@@ -305,8 +304,8 @@ The **sidebarPanel** contains adjustable inputs.
 Since the user is supposed to be able to choose a number of radii, we used a selectInput. Here, the user can choose between 1 to 6 radii.
 Depending on the number of radii chosen, there has to be a variable number of inputSliders to choose the radius for each perimeter. Therefore, we added conditionalPanels depending on the given selectInput.
 We also added a sliderInput so that the user can assign a critical amount of affected vehicles.
-![sidebarPanel, color accents in "grass-green"](https://64.media.tumblr.com/31271117f5e7076502540d9a2de28bd9/6f3e139bb8a6e69e-d3/s640x960/61918ef790eaa10b620a952e782385baff6be772.jpg=250x)
 
+![sidebarPanel, color accents in "grass-green"](https://64.media.tumblr.com/31271117f5e7076502540d9a2de28bd9/6f3e139bb8a6e69e-d3/s640x960/61918ef790eaa10b620a952e782385baff6be772.jpg){height=25%, width=25%}
 
 In the **mainPanel**, the outputs are displayed and it contains a logo, as demanded.
 The mainPanel contains four tabPanels, i.e. a map, a barplot, a table, and the basic dataset to prove all visualizations.
@@ -317,7 +316,7 @@ The mainPanel contains four tabPanels, i.e. a map, a barplot, a table, and the b
 
 In the server, various reactive functions are defined and data tables are manipulated to to be able to generate the requested visualizations.
 
-#### The Map
+#### Map
 
 The **map** ist divided into the two groups *Clustered Markers* and *Cities of Interest*. If not interested in one of the groups, the user can hide it and focus on the information he needs.
 ![The Map showing three concentric circles around Hamburg and displaying all cities with at least 5000 affected vehicles](https://64.media.tumblr.com/8543c11e3dd97dd09213a16137d23d12/4667e59bc43749fe-28/s2048x3072/ab85dbfcddbeb9f8ad0e9645a761fa782d9f19be.jpg)
@@ -327,8 +326,8 @@ By clicking on the number of a cluster, the map zooms into the borders of the cl
 
 
 
-![Blue Markers in one location](https://64.media.tumblr.com/105bc118144af4d41dda099281bd9e9d/ce071781b55eae41-a6/s1280x1920/1ce7a42c3fcb393ea14d6117fda5da7bd7b67d63.jpg)
-![Popup containing relevant information](https://64.media.tumblr.com/af4c83fc16df74d529459b90006882b4/ce071781b55eae41-1a/s1280x1920/ffec34028454c2f42fd86545554b6805b6dd5045.jpg)
+![Blue Markers in one location](https://64.media.tumblr.com/105bc118144af4d41dda099281bd9e9d/ce071781b55eae41-a6/s1280x1920/1ce7a42c3fcb393ea14d6117fda5da7bd7b67d63.jpg){height=50%, width=50%}
+![Popup containing relevant information](https://64.media.tumblr.com/af4c83fc16df74d529459b90006882b4/ce071781b55eae41-1a/s1280x1920/ffec34028454c2f42fd86545554b6805b6dd5045.jpg){height=50%, width=50%}
 
 
 In the **Cities of Interest** group, cities/communities are highlighted with a red marker if the critical number of affected vehicles specified by the user is reached or exceeded. When the user hovers over the marker with the cursor, a label is displayed 
@@ -376,4 +375,21 @@ For furhter information about affected vehicles for a larger radius around Hambu
 ## Highly affected cities
 
 Since a driving ban might be implemented for further cities, it is examined which cities have a certain amount of affected vehicles.
+When the critical number of affected vehicles is set to 5000, 8 cities are highlighted.
 
+![8 Cities with at least 5000 affected vehicles](https://64.media.tumblr.com/c45d5d3890048a9db266637774248344/64cb2ae8ccf674b5-99/s2048x3072/af9518e288e14d9be468133bea92c93680aa1926.jpg)
+These cities are:
+
+City | Affected Vehicles
+------------- | -------------
+Köln | 13351
+Dortmund  | 8312
+Münster | 8053
+Oberhausen | 7808
+Dresden | 6851
+Leipzig| 6669
+Bochum | 5871
+Bielefeld | 5084
+
+
+For furhter information about highly affected cities for a smaller critical number of faulty vehicles, the Shiny-App can be used.
