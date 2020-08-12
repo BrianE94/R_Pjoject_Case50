@@ -56,13 +56,7 @@ data_bestandteile_oem1_typ12 <- read_csv2("./Data/Fahrzeug/Bestandteile_Fahrzeug
 
 # Import Komponente K1DI1
 data_komponente_k1di1 <- read_csv("./Data/Komponente/Komponente_K1DI1.csv",
-col_types = cols(ID_Motor.y=col_character(),
-                 Produktionsdatum.y=col_date(format = ""), Herstellernummer.y=col_integer(),
-                 Werksnummer.y=col_integer(), Fehlerhaft_Datum.y=col_date(format = ""),
-                 Fehlerhaft_Fahrleistung.y=col_integer(), ID_Motor=col_character(),
-                 Produktionsdatum=col_date(format = ""), Herstellernummer=col_integer(),
-                 Werksnummer=col_integer(),Fehlerhaft_Datum=col_date(format = ""),
-                 Fehlerhaft_Fahrleistung=col_integer()))
+col_types = cols(ID_Motor.y=col_character(), Produktionsdatum.y=col_date(format = ""), Herstellernummer.y=col_integer(), Werksnummer.y=col_integer(), Fehlerhaft_Datum.y=col_date(format = ""), Fehlerhaft_Fahrleistung.y=col_integer(), ID_Motor=col_character(), Produktionsdatum=col_date(format = ""), Herstellernummer=col_integer(), Werksnummer=col_integer(),Fehlerhaft_Datum=col_date(format = ""), Fehlerhaft_Fahrleistung=col_integer()))
 ```
 
 Besides, it is necessary to find the location of the vehicles in Germany. Additional data sets have the required information for this. "OpenGeoDB_bundesland_plz_ort_de (1)", "Zulassungen_alle_Fahrzeuge" and "Geodaten_Gemeinden_v1.2_2017-08-22_TrR" are imported by the "readr" package and the "readexcel" package.
