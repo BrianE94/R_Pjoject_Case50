@@ -39,9 +39,7 @@ Vehicle data  | Geographical Data
 ------------- | -------------
 Bestandteile_Fahrzeuge_OEM1_Typ11  | OpenGeoDB_bundesland_plz_ort_de (1)
 Bestandteile_Fahrzeuge_OEM1_Typ12  | Zulassungen_alle_Fahrzeuge
-Fahrzeuge_OEM1_Typ11  | Geodaten_Gemeinden_v1.2_2017-08-22_TrR
-Fahrzeuge_OEM1_Typ12  |
-Komponente_K1DI1      |
+Komponente_K1DI1  | Geodaten_Gemeinden_v1.2_2017-08-22_TrR
 
 The task is to find all relevant type 11 and type 12 vehicles with an engine "K1DI1" produced during the problematic period from the data tables OEM1. To get the required data for vehicles, the following files are imported by the "readr" package:
 "Bestandteile_Fahrzeuge_OEM1_Typ11","Bestandteile_Fahrzeuge_OEM1_Typ12" and "Komponente_K1DI1". Here, it is important to define the column types.
@@ -68,14 +66,12 @@ An overview is given by the following table:
 
 ```{r import location, warning = FALSE, message=FALSE}
 # Import Location and Zulassung
-
 data_bundesland_plz_ort <- read_excel("./Data/Zulassungen/OpenGeoDB_bundesland_plz_ort_de (1).xls", col_names = c("Bundesland","PLZ","Ort"))
 
-#Problem mit Länge der PLZ bei Transformation zu integer (see "Leading Zeros") bei Sachsen
-#data_bundesland_plz_ort$PLZ <- as.integer(data_bundesland_plz_ort$PLZ)
-
+# Import data set Zulassung
 data_Zulassung <- read_csv2("./Data/Zulassungen/Zulassungen_alle_Fahrzeuge.csv")
 
+# Import data set Geodaten Gemeinde
 data_Geodaten_Gemeinden <- read_csv2("./Data/Geodaten/Geodaten_Gemeinden_v1.2_2017-08-22_TrR.csv",col_types =                                    cols(Postleitzahl=col_character(),Laengengrad=col_double(),Breitengrad=col_double()))
 ```
 # Data Preparation
@@ -92,6 +88,7 @@ data_bestandteile_oem1_typ12$X1<- NULL # Delete unnecessary column
 
 
 # Tidy Komponente K1DI1
+
 # Information was spread over several columns and had to be gathered into single columns
 data_komponente_k1di1 <- data_komponente_k1di1 %>%
   select(ID_Motor.x,ID_Motor.y,ID_Motor,Produktionsdatum.x,Produktionsdatum.y,Produktionsdatum)%>% # Select only relevant data columns
@@ -115,9 +112,9 @@ data_bundesland_plz_ort <- data_bundesland_plz_ort%>% #import data
   add_row(Bundesland="Thüringen",PLZ="99820",Ort="Hoerselberg Hainich") %>% # add data to the data set
   subset(Ort!="Mockrehna")%>% # remove row with false PLZ, Source: https://stackoverflow.com/questions/12328056/how-do-i-delete-rows-in-a-data-frame
   add_row(Bundesland="Sachsen",PLZ="04862",Ort="Mockrehna")%>% # add data to the data set
-  add_row(Bundesland="Sachsen",PLZ="08344",Ort="Gruenhain Beierfeld")
+  add_row(Bundesland="Sachsen",PLZ="08344",Ort="Gruenhain Beierfeld") # add data to the data set
 
-data_bundesland_plz_ort$Ort <- removeNumbers(data_bundesland_plz_ort$Ort)# remove unnecessary numbers, for more in  https://stackoverflow.com/questions/13590139/remove-numbers-from-alphanumeric-characters
+data_bundesland_plz_ort$Ort <- removeNumbers(data_bundesland_plz_ort$Ort)# remove unnecessary numbers, for more in Information: https://stackoverflow.com/questions/13590139/remove-numbers-from-alphanumeric-characters
 
 #Zulassung
 
@@ -130,8 +127,8 @@ data_Zulassung$X1 <- NULL # Remove unnecessary column
 #Geodaten Gemeiden
 
 data_Geodaten_Gemeinden<-data_Geodaten_Gemeinden%>%
-  rename(Ort=Gemeinde,PLZ= Postleitzahl)%>%
-  add_row(PLZ="87637",Ort="Seeg",Laengengrad=10.6104157,Breitengrad=47.6542215)
+  rename(Ort=Gemeinde,PLZ= Postleitzahl)%>%# Rename column for consistenc
+  add_row(PLZ="87637",Ort="Seeg",Laengengrad=10.6104157,Breitengrad=47.6542215)# Add informtion of place "Seeg"
   
 data_Geodaten_Gemeinden$PLZ <- str_pad(data_Geodaten_Gemeinden$PLZ,5,pad = "0") # Add missing Zeros to PLZ length under 5, for more info see https://stackoverflow.com/questions/5812493/how-to-add-leading-zeros
 data_Geodaten_Gemeinden$Ort <- removeNumbers(data_Geodaten_Gemeinden$Ort) # Remove unnecessary numbers in location
@@ -194,9 +191,9 @@ data_bestandteile_OEM1 <- bind_rows(new_data_bestandteile_oem1_typ11,
 
 
 #Joining Komponente K1DI1 and Bestandteile OEM
-data_vehicle <- left_join(new_data_komponente_k1di1, data_bestandteile_OEM1, by="ID_Motor")%>%
-  drop_na()%>%
-  distinct()
+data_vehicle <- left_join(new_data_komponente_k1di1, data_bestandteile_OEM1, by="ID_Motor")%>%# join the data
+  drop_na()%>% #delete NA
+  distinct()# delite duplicates
 
 # Graphical illustration:
 graph_data_vehicle <- data_vehicle%>%
@@ -207,7 +204,7 @@ kable(graph_data_vehicle, caption = "Summary: Vehicle Data")
 #### Joining geographical data:
 
 * The Data sets "Gemeinden" and "Bundesland" are leftjoined by the postal code. As some German states share postcal codes, some cities/communities are assigned a wrong state. For instance, this is the case for Oststeinbek and Stapelfeld which are both located in Schleswig-Holstein but are assigned the state Hamburg, as they are right next to the city.
-* To the resulting data set, another column is added, which shows the distance between Hamburg and any location in the data set.
+* To the resulting data set, another column is added, which shows the distance between the city center of Hamburg and any location in the data set.
 * The result is a bundled data set containing locations, longitude, latitude and the postal code. Next, the data set is merged
 * Finally, the result is leftjoined by postal code with Zulassung. Now, every vehicle has a location.
 ```{r joining geographical data, warning = FALSE, message=FALSE}
@@ -215,8 +212,8 @@ kable(graph_data_vehicle, caption = "Summary: Vehicle Data")
 
 # One data set for location
 data_Ort2 <- left_join(data_Geodaten_Gemeinden,data_bundesland_plz_ort, by="PLZ")%>%
-  rename(Ort=Ort.x)%>%
-  distinct(Ort, .keep_all=TRUE)
+  rename(Ort=Ort.x)%>%# Rname column
+  distinct(Ort, .keep_all=TRUE)# distinct duplicate rows
 data_Ort2$Ort.y <- NULL # delete extra column after joining
 
 #Calculate distance from Hamburg for every City
@@ -252,17 +249,21 @@ The last step is to save the final data set.
 ```{r final data, warning = FALSE, message=FALSE}
 # Final Dataset
 final_data_Group_50 <- left_join(data_vehicle,data_Ort,by="ID_Fahrzeug")
-                                 
-number_towns <- final_data_Group_50%>%  
-  count(Ort)
-final_data_Group_50 <- left_join(final_data_Group_50,number_towns,by="Ort")%>%
-  distinct(ID_Fahrzeug, .keep_all=TRUE)
 
+# Adding the total number of affected cars in a city/community                                  
+number_towns <- final_data_Group_50%>%  
+  count(Ort) # count the number of cties to get the total number
+final_data_Group_50 <- left_join(final_data_Group_50,number_towns,by="Ort")%>% #Join total number to the final data set
+  distinct(ID_Fahrzeug, .keep_all=TRUE)# distinct the duplicated rows
+
+# Save final data set
 save(final_data_Group_50, file="final_data_Group_50.Rda")
 
+#Graphical illustration
+graph_final_data_Group_50 <- final_data_Group_50%>%
+  head(5)
 
-# delete duplicate rows
-#final_data_Group_50 <- distinct(final_data_Group_50)
+kable(graph_final_data_Group_50,caption="Summary: Geographical Data ")
 ```
 
 
