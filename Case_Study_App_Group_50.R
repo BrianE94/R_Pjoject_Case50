@@ -20,8 +20,8 @@ install_load("shiny", "leaflet", "htmltools", "highcharter", "ggplot2", "maps", 
 load(file="final_data_Group_50.Rda")
 
 #test: First run with 1000  
-test <- final_data_Group_50%>%
-  head(10000)
+test <- final_data_Group_50#%>%
+  #head(10000)
 
 
 # Define UI for application that draws a histogram
@@ -94,7 +94,7 @@ ui <- fluidPage(
           sliderInput("n_6","Select Radius 6 in km", min=0, max = 700, step = 25, value= 500)
         ),
         # Add user input to highlight cities and communities with a certain amount of affected vehicles (4.d)
-        sliderInput("anzahl", "Select a critical number to find all cities and communities with a certain amount of affected registered vehicles", min = 500, max = 5000, value = 2500, step = 100)
+        sliderInput("anzahl", "Select a critical number to find all cities and communities with a certain amount of affected registered vehicles", min = 500, max = 7500, value = 5000, step = 100)
       ),
       #Creating MainPanel with Tabsets
       mainPanel(
