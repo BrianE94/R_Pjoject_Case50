@@ -21,8 +21,8 @@ load(file="final_data_Group_50.Rda")
 load(file="final_data_Group_50_K.Rda")
 
 #test: First run with 1000  
-test <- final_data_Group_50_K#%>%
-  #head(100000)
+test <- final_data_Group_50_K%>%
+  head(10000)
 
 
 # Define UI for application that draws a histogram
@@ -95,7 +95,7 @@ ui <- fluidPage(
           sliderInput("n_6","Select Radius 6 in km", min=0, max = 700, step = 25, value= 500)
         ),
         # Add user input to highlight cities and communities with a certain amount of affected vehicles (4.d)
-        sliderInput("anzahl", "Select a critical number to find all cities and communities with a certain amount of affected registered vehicles", min = 500, max = 5000, value = 2500)
+        sliderInput("anzahl", "Select a critical number to find all cities and communities with a certain amount of affected registered vehicles", min = 500, max = 5000, value = 2500, step = 100)
       ),
       #Creating MainPanel with Tabsets
       mainPanel(
@@ -208,7 +208,7 @@ server <- function(input, output, session) {
                   group="Cities of Interest",
                   icon = auto_marker,
                   ##Choosing labels rather than because we prefer information being displayed when hovering above the marker, Source:https://rstudio.github.io/leaflet/popups.html
-                  label=~paste("Number of Vehicles affected in ",
+                  label=~paste("Number of affected vehicles in ",
                                Ort,
                                ":",
                                n)
@@ -444,6 +444,7 @@ server <- function(input, output, session) {
                 test %>%
                   mutate(dist_zu_ham = dist/1000)%>%
                   select(Ort, Bundesland, Laengengrad, Breitengrad, ID_Motor,Produktionsdatum, ID_Fahrzeug, Zulassung, dist_zu_ham, n)%>%
+                  arrange(Ort)%>%
                   rename("City/Community" = Ort, State = Bundesland, Longitude = Laengengrad, Latitude = Breitengrad, "Distance to Hamburg in km" = dist_zu_ham, "Vehicle ID" = ID_Fahrzeug, "Production Date of the Motor" = Produktionsdatum, "Registration Date of the Vehicle" = Zulassung, "Motor ID" = ID_Motor, "Cases in City/Community"=n)
                 )
     })
