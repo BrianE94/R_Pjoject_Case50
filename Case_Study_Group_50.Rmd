@@ -166,7 +166,7 @@ Joining vehicle data:
 * The data sets Bestandeile OEM1 Typ 11/12 are put together. Then the integer column "ID_Fahrzeug_Nummer" is introduced for later joining.
 * Same precedure with the data sets Fahrzeug OEM OEM1 Typ 11/12
 * Now the two datasets are leftjoined by the created column "ID_Fahrzeug_Nummer"
-The result is that the data set ""data_OEM" contains all vehicels with the diesel engine "K1DI1", which were produced int the period 1 March 2008 - 11 May 2012.
+The result is that the data set ""data_OEM" contains all cars with the diesel engine "K1DI1" and the unique vehicel number "ID_Fahrzeug", which were produced int the period 1 March 2008 - 11 May 2012.
 
 ```{r}
 #Summarise datatset bestandteile from oem1 Typ 11/12
