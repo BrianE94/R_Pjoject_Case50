@@ -1,6 +1,6 @@
 ---
 title: "Case_Study_Group_50"
-author: "Long Hong, Vanessa Schweitzer, Jonas Rieger, Andre Düding, Brian Eiffert"
+author: "Long Dinh, Vanessa Schweitzer, Jonas Rieger, Andre Düding, Brian Eiffert"
 date: "16 07 2020"
 output: 
   html_document:
@@ -30,7 +30,7 @@ library(install.load)
 install_load("readr", "tidyverse", "stringr", "readxl","ggplot2", "plotly","lubridate", "data.table","bit64","tm","geosphere","sp","knitr")
 ```
 
-# Import Data & Tidy Data
+# Import Data
 
 ## Choice of relevant data
 
@@ -41,51 +41,34 @@ Vehicle data  | Geographical Data
 Bestandteile_Fahrzeuge_OEM1_Typ11  | OpenGeoDB_bundesland_plz_ort_de (1)
 Bestandteile_Fahrzeuge_OEM1_Typ12  | Zulassungen_alle_Fahrzeuge
 Fahrzeuge_OEM1_Typ11  | Geodaten_Gemeinden_v1.2_2017-08-22_TrR
-Fahrzeuge_OEM1_Typ12  | 
+Fahrzeuge_OEM1_Typ12  |
+Komponente_K1DI1      |
 
 The task is to find all relevant type 11 and type 12 vehicles with an engine "K1DI1" from OEM1 that were produced during the problematic period. Getting the proper types of vehicles of OEM 1 the following files are imported by the "readr" package: "Bestandteile_Fahrzeuge_OEM1_Typ11","Bestandteile_Fahrzeuge_OEM1_Typ12", "Fahrzeuge_OEM1_Typ11" and "Fahrzeuge_OEM1_Typ12". Here it is important to define the column types.In "Bestandteile_Fahrzeuge_OEM1_Typ11", "Bestandteile_Fahrzeuge_OEM1_Typ12" contains the relevant "ID_Motor", where the relevant motor type is located. "Fahrzeuge_OEM1_Typ11" and "Fahrzeuge_OEM1_Typ12" contains the production period. For easier later handling of the data redundant/unnessesary columns were detected and deleted after the import. 
 ```{r import vehicels}
-# data_bestandteile_oem1_typ11/12, data_fahrzeug_OEM1_typ11/12
-
 # Import Bestabdteile OEM Typ 11/12
 data_bestandteile_oem1_typ11 <- read_csv2("./Data/Fahrzeug/Bestandteile_Fahrzeuge_OEM1_Typ11.csv", col_types = cols(X1=col_integer(),ID_Karosserie=col_character(),ID_Schaltung=col_character(),ID_Sitze=col_character(),ID_Motor=col_character(),ID_Fahrzeug=col_character())) # Import data
-data_bestandteile_oem1_typ11$X1<- NULL # Delete unnecessary column
 
 data_bestandteile_oem1_typ12 <- read_csv2("./Data/Fahrzeug/Bestandteile_Fahrzeuge_OEM1_Typ12.csv", col_types = cols(X1=col_integer(),ID_Karosserie=col_character(),ID_Schaltung=col_character(),ID_Sitze=col_character(),ID_Motor=col_character(),ID_Fahrzeug=col_character())) # Import data
-data_bestandteile_oem1_typ12$X1<- NULL # Delete unnecessary column
+
 
 # Import Fahrzeug OEM Typ 11/12 
 data_fahrzeug_OEM1_Typ11 <- read_csv("./Data/Fahrzeug/Fahrzeuge_OEM1_Typ11.csv", col_types = cols(X1= col_integer(),ID_Fahrzeug=col_character(),Produktionsdatum= col_character(),Herstellnumer= col_integer(), Fehlerhaft=col_skip(), Fehlerhaft_Datum=col_character(), Fehlerhaft_Fahrleistung=col_integer()))# Import data
 
-data_fahrzeug_OEM1_Typ11 <- data_fahrzeug_OEM1_Typ11[,c(-1,-2)]# Delete unnecessary column
-data_fahrzeug_OEM1_Typ11$Produktionsdatum <- as.Date(data_fahrzeug_OEM1_Typ11$Produktionsdatum,
-                                                     format = "%Y-%m-%d")# Transform col as date
-data_fahrzeug_OEM1_Typ11$Fehlerhaft_Datum <- as.Date(data_fahrzeug_OEM1_Typ11$Fehlerhaft_Datum,
-                                                     format = "%Y-%m-%d")# Transform col as date
-
-
-data_fahrzeug_OEM1_Typ12 <- read_csv("./Data/Fahrzeug/Fahrzeuge_OEM1_Typ11.csv",col_types = cols(X1= col_integer(),ID_Fahrzeug=col_character(),Produktionsdatum= col_character(),Herstellnumer= col_integer(), Fehlerhaft=col_skip(), Fehlerhaft_Datum=col_character(), Fehlerhaft_Fahrleistung=col_integer()))# Import data
-
-data_fahrzeug_OEM1_Typ12 <- data_fahrzeug_OEM1_Typ12[,c(-1,-2)]# Delete unnecessary column
-data_fahrzeug_OEM1_Typ12$Produktionsdatum <- as.Date(data_fahrzeug_OEM1_Typ12$Produktionsdatum,
-                                                     format = "%Y-%m-%d") # Transform col as date
-data_fahrzeug_OEM1_Typ12$Fehlerhaft_Datum <- as.Date(data_fahrzeug_OEM1_Typ12$Fehlerhaft_Datum,
-                                                     format = "%Y-%m-%d") # Transform col as date
+data_fahrzeug_OEM1_Typ12 <- read_csv("./Data/Fahrzeug/Fahrzeuge_OEM1_Typ11.csv",col_types = cols(X1= col_integer(), ID_Fahrzeug=col_character(), Produktionsdatum= col_date(format = ""), Herstellnumer= col_integer(), Fehlerhaft=col_skip(), Fehlerhaft_Datum=col_character(), Fehlerhaft_Fahrleistung=col_integer()))# Import data
 
 # Import Komponente K1DI1
 
 data_komponente_k1di1 <- read_csv("./Data/Komponente/Komponente_K1DI1.csv",
-col_types = cols(ID_Motor.y=col_character(),Produktionsdatum.y=col_date(format = ""),Herstellernummer.y=col_integer(),Werksnummer.y=col_integer(),Fehlerhaft_Datum.y=col_date(format = ""),Fehlerhaft_Fahrleistung.y=col_integer(),ID_Motor=col_character(),Produktionsdatum=col_date(format = ""),Herstellernummer=col_integer(),Werksnummer=col_integer(),Fehlerhaft_Datum=col_date(format = ""),Fehlerhaft_Fahrleistung=col_integer()))
-
-# Tidy Komponente K1DI1
-data_komponente_k1di1 <- data_komponente_k1di1 %>%
-  select(ID_Motor.x,ID_Motor.y,ID_Motor,Produktionsdatum.x,Produktionsdatum.y,Produktionsdatum)%>%
-  gather('ID_Motor.x','ID_Motor.y','ID_Motor', key = "Motoren",value="ID_Motor_K1DI1", na.rm=TRUE) %>%
-  gather('Produktionsdatum.x','Produktionsdatum.y','Produktionsdatum', key = "Daten",value="Produktionsdatum_K1DI1", na.rm=TRUE)%>%
-  select(ID_Motor_K1DI1,Produktionsdatum_K1DI1)%>%
-  rename(ID_Motor=ID_Motor_K1DI1, Produktionsdatum=Produktionsdatum_K1DI1)
-
+col_types = cols(ID_Motor.y=col_character(),
+                 Produktionsdatum.y=col_date(format = ""), Herstellernummer.y=col_integer(),
+                 Werksnummer.y=col_integer(), Fehlerhaft_Datum.y=col_date(format = ""),
+                 Fehlerhaft_Fahrleistung.y=col_integer(), ID_Motor=col_character(),
+                 Produktionsdatum=col_date(format = ""), Herstellernummer=col_integer(),
+                 Werksnummer=col_integer(),Fehlerhaft_Datum=col_date(format = ""),
+                 Fehlerhaft_Fahrleistung=col_integer()))
 ```
+
 Besides, it is necessary to find the location of the vehicles in Germany. for that additional data sets have the required information. "OpenGeoDB_bundesland_plz_ort_de (1)", "Zulassungen_alle_Fahrzeuge" and "Geodaten_Gemeinden_v1.2_2017-08-22_TrR" are imported by the "readr" package and the "readexcel" package. For "OpenGeoDB_bundesland_plz_ort_de (1)" contains the information about the German state, places and postcode. Unfortunately, the data set is missing the place "Seeg", which was added by hand. This missing data was found by the later joining and evaluating the structure of the data set. Furthermore place obervations sometimes contains  numbers, which were deleted by the use of the "tm" package. "Zulassungen_alle_Fahrzeuge" contains the data, where the cars got the admission. There, the location has to be cleaned by eliminating additional numbers and convert the word with one big capital letter. "Geodaten_Gemeinden_v1.2_2017-08-22_TrR" contains the location, postal code and the longitude and latitude of the location, which is very important for developing the Shiny App. 
 An overview illustrates the following table:
 
@@ -93,7 +76,48 @@ An overview illustrates the following table:
 ```{r import location,echo = FALSE,warning = FALSE,message=FALSE}
 # Import Location and Zulassung
 
-data_bundesland_plz_ort <- read_excel("./Data/Zulassungen/OpenGeoDB_bundesland_plz_ort_de (1).xls", col_names = c("Bundesland","PLZ","Ort"))%>% #import data
+data_bundesland_plz_ort <- read_excel("./Data/Zulassungen/OpenGeoDB_bundesland_plz_ort_de (1).xls", col_names = c("Bundesland","PLZ","Ort"))
+
+#Problem mit Länge der PLZ bei Transformation zu integer (see "Leading Zeros") bei Sachsen
+#data_bundesland_plz_ort$PLZ <- as.integer(data_bundesland_plz_ort$PLZ)
+
+data_Zulassung <- read_csv2("./Data/Zulassungen/Zulassungen_alle_Fahrzeuge.csv")
+
+data_Geodaten_Gemeinden <- read_csv2("./Data/Geodaten/Geodaten_Gemeinden_v1.2_2017-08-22_TrR.csv",col_types =                                    cols(Postleitzahl=col_character(),Laengengrad=col_double(),Breitengrad=col_double()))
+```
+
+# Tidy
+In this section the data sets are tidy uped. Here unessesary columns are deleted, the format gets updated and additional information is added. 
+## Tidy vehicel data sets
+```{r}
+data_bestandteile_oem1_typ11$X1<- NULL # Delete unnecessary column
+
+data_bestandteile_oem1_typ12$X1<- NULL # Delete unnecessary column
+
+data_fahrzeug_OEM1_Typ11 <- data_fahrzeug_OEM1_Typ11[,c(-1,-2)]# Delete unnecessary column
+data_fahrzeug_OEM1_Typ11$Produktionsdatum <- as.Date(data_fahrzeug_OEM1_Typ11$Produktionsdatum,
+                                                     format = "%Y-%m-%d")# Transform col as date
+data_fahrzeug_OEM1_Typ11$Fehlerhaft_Datum <- as.Date(data_fahrzeug_OEM1_Typ11$Fehlerhaft_Datum,
+                                                     format = "%Y-%m-%d")# Transform col as date
+
+data_fahrzeug_OEM1_Typ12$Produktionsdatum <- as.Date(data_fahrzeug_OEM1_Typ12$Produktionsdatum,
+                                                     format = "%Y-%m-%d") # Transform col as date
+data_fahrzeug_OEM1_Typ12$Fehlerhaft_Datum <- as.Date(data_fahrzeug_OEM1_Typ12$Fehlerhaft_Datum,
+                                                     format = "%Y-%m-%d") # Transform col as date
+
+data_fahrzeug_OEM1_Typ12 <- data_fahrzeug_OEM1_Typ12[,c(-1,-2)]# Delete unnecessary column
+# Tidy Komponente K1DI1
+data_komponente_k1di1 <- data_komponente_k1di1 %>%
+  select(ID_Motor.x,ID_Motor.y,ID_Motor,Produktionsdatum.x,Produktionsdatum.y,Produktionsdatum)%>%
+  gather('ID_Motor.x','ID_Motor.y','ID_Motor', key = "Motoren",value="ID_Motor_K1DI1", na.rm=TRUE) %>%
+  gather('Produktionsdatum.x','Produktionsdatum.y','Produktionsdatum', key = "Daten",value="Produktionsdatum_K1DI1", na.rm=TRUE)%>%
+  select(ID_Motor_K1DI1,Produktionsdatum_K1DI1)%>%
+  rename(ID_Motor=ID_Motor_K1DI1, Produktionsdatum=Produktionsdatum_K1DI1)
+```
+## Tidy gegraphical data sets
+```{r}
+# Tidy Bundesland Ort,PLZ
+data_bundesland_plz_ort <- data_bundesland_plz_ort%>% #import data
   add_row(Bundesland="Bayern",PLZ="87637",Ort="Seeg") %>% # add data to the data set
   add_row(Bundesland="Thüringen",PLZ="98630",Ort="Roemhild") %>% # add data to the data set
   add_row(Bundesland="Thüringen",PLZ="99820",Ort="Hoerselberg Hainich") %>% # add data to the data set
@@ -103,28 +127,25 @@ data_bundesland_plz_ort <- read_excel("./Data/Zulassungen/OpenGeoDB_bundesland_p
 
 data_bundesland_plz_ort$Ort <- removeNumbers(data_bundesland_plz_ort$Ort)# remove unnecessary numbers, for more in  https://stackoverflow.com/questions/13590139/remove-numbers-from-alphanumeric-characters
 
+#Zulassung
 
-#Problem mit Länge der PLZ bei Transformation zu integer (see "Leading Zeros") bei Sachsen
-#data_bundesland_plz_ort$PLZ <- as.integer(data_bundesland_plz_ort$PLZ)
-
-data_Zulassung <- read_csv2("./Data/Zulassungen/Zulassungen_alle_Fahrzeuge.csv")%>%
-  rename(Ort=Gemeinden)
+data_Zulassung<-data_Zulassung%>%
+  rename(Ort=Gemeinden)# Rneame column for consirnecy
 data_Zulassung$Ort <- str_to_title(data_Zulassung$Ort) # convert the word with one big capital letter
 data_Zulassung$Ort <- removeNumbers(data_Zulassung$Ort) # Remove unnecessary numbers in location
 data_Zulassung$X1 <- NULL # Remove unnecessary column
 
-data_Geodaten_Gemeinden <- read_csv2("./Data/Geodaten/Geodaten_Gemeinden_v1.2_2017-08-22_TrR.csv",col_types =                                    cols(Postleitzahl=col_character(),Laengengrad=col_double(),Breitengrad=col_double()))%>%
+#Geodaten Gemeiden
+
+data_Geodaten_Gemeinden<-data_Geodaten_Gemeinden%>%
   rename(Ort=Gemeinde,PLZ= Postleitzahl)%>%
   add_row(PLZ="87637",Ort="Seeg",Laengengrad=10.6104157,Breitengrad=47.6542215)
   
-
 data_Geodaten_Gemeinden$PLZ <- str_pad(data_Geodaten_Gemeinden$PLZ,5,pad = "0") # Add missing Zeros to PLZ length under 5, for more info see https://stackoverflow.com/questions/5812493/how-to-add-leading-zeros
 data_Geodaten_Gemeinden$Ort <- removeNumbers(data_Geodaten_Gemeinden$Ort) # Remove unnecessary numbers in location
 data_Geodaten_Gemeinden$Ort <- str_to_title(data_Geodaten_Gemeinden$Ort) # convert the word with one big capital letter
 data_Geodaten_Gemeinden <- data_Geodaten_Gemeinden[,c(-1,-2)] # Remove unnecessary column
-
 ```
-
 # Transforamtaion
 In this section the principles of data manipulation are used to get th compact datatset. Mostly the "dplyr" package is used.
 
