@@ -1,6 +1,6 @@
 ---
 title: "Case_Study_Group_50"
-author: "Long Dinh, Vanessa Schweitzer, Jonas Rieger, Andre Düding, Brian Eiffert"
+author: "Long Dinh, Andre Düding, Brian Eiffert, Jonas Rieger, Vanessa Schweitzer"
 date: "16 07 2020"
 output: 
   html_document:
@@ -16,7 +16,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Introduction
 
-The intention of this project is to find the faulty vehicles, which are of the type "Type11" and "Type12". A diesel engine "K1DI1" has been installed on these vehicles. The defective vehicles were produced from 1 March 2008 to 11 March 2012.  The recall action will start where the first diesel bans come into force. As starting point the Hamburg area is chosen, because there the first bans will be introduced. 
+The intention of this project is to find vehicles of "Type11" and "Type12" which have installed the faulty diesel engine "K1DI1". The defective engines were produced from 1 March 2008 to 11 May 2012.  The recall action will start in the Hamburg area, as the first diesel bans come into force there. 
 
 # Packages
 Install required packages.
@@ -27,14 +27,14 @@ if(!require("install.load")){
 }
 library(install.load)
 
-install_load("readr", "tidyverse", "stringr", "readxl","ggplot2", "plotly","lubridate", "data.table","bit64","tm","geosphere","sp","knitr")
+install_load("readr", "tidyverse", "stringr", "readxl","ggplot2", "plotly","lubridate", "data.table","tm","geosphere","sp","knitr")
 ```
 
-# Import Data
+# Data Import
 
 ## Choice of relevant data
 
-In fact, the necessary data is divided up into vehicle data, where the diesel engine data and production period is located, and geographical data consiting of the location of the cities and where the vehicles are licensed. An overview shows the following table.
+The required data is divided up into vehicle data, where the diesel engine data and production period is located, and geographical data consisting of the location of the cities and where the vehicles are registered. The following table gives an overview.
 
 Vehicle data  | Geographical Data
 ------------- | -------------
@@ -44,21 +44,18 @@ Fahrzeuge_OEM1_Typ11  | Geodaten_Gemeinden_v1.2_2017-08-22_TrR
 Fahrzeuge_OEM1_Typ12  |
 Komponente_K1DI1      |
 
-The task is to find all relevant type 11 and type 12 vehicles with an engine "K1DI1" from OEM1 that were produced during the problematic period. Getting the proper types of vehicles of OEM 1 the following files are imported by the "readr" package: "Bestandteile_Fahrzeuge_OEM1_Typ11","Bestandteile_Fahrzeuge_OEM1_Typ12", "Fahrzeuge_OEM1_Typ11" and "Fahrzeuge_OEM1_Typ12". Here it is important to define the column types.In "Bestandteile_Fahrzeuge_OEM1_Typ11", "Bestandteile_Fahrzeuge_OEM1_Typ12" contains the relevant "ID_Motor", where the relevant motor type is located. "Fahrzeuge_OEM1_Typ11" and "Fahrzeuge_OEM1_Typ12" contains the production period. For easier later handling of the data redundant/unnessesary columns were detected and deleted after the import. 
-```{r import vehicels}
+The task is to find all relevant type 11 and type 12 vehicles with an engine "K1DI1" produced during the problematic period from the data tables OEM1. To get the required data for vehicles, the following files are imported by the "readr" package:
+"Bestandteile_Fahrzeuge_OEM1_Typ11","Bestandteile_Fahrzeuge_OEM1_Typ12" and "Komponente_K1DI1". Here, it is important to define the column types.
+The data tables "Bestandteile_Fahrzeuge_OEM1_Typ11", "Bestandteile_Fahrzeuge_OEM1_Typ12" contain the relevant "ID_Motor", which is needed to match the affected engines. The data table "Komponente_K1DI1" shows the production date of the engine which is needed to find the engines that were produced during the specified period.
+For easier handling of the data, redundant/unnecessary columns were detected and deleted after the import. 
+```{r import vehicles, warning = FALSE, message= FALSE}
 # Import Bestabdteile OEM Typ 11/12
 data_bestandteile_oem1_typ11 <- read_csv2("./Data/Fahrzeug/Bestandteile_Fahrzeuge_OEM1_Typ11.csv", col_types = cols(X1=col_integer(),ID_Karosserie=col_character(),ID_Schaltung=col_character(),ID_Sitze=col_character(),ID_Motor=col_character(),ID_Fahrzeug=col_character())) # Import data
 
 data_bestandteile_oem1_typ12 <- read_csv2("./Data/Fahrzeug/Bestandteile_Fahrzeuge_OEM1_Typ12.csv", col_types = cols(X1=col_integer(),ID_Karosserie=col_character(),ID_Schaltung=col_character(),ID_Sitze=col_character(),ID_Motor=col_character(),ID_Fahrzeug=col_character())) # Import data
 
 
-# Import Fahrzeug OEM Typ 11/12 
-data_fahrzeug_OEM1_Typ11 <- read_csv("./Data/Fahrzeug/Fahrzeuge_OEM1_Typ11.csv", col_types = cols(X1= col_integer(),ID_Fahrzeug=col_character(),Produktionsdatum= col_character(),Herstellnumer= col_integer(), Fehlerhaft=col_skip(), Fehlerhaft_Datum=col_character(), Fehlerhaft_Fahrleistung=col_integer()))# Import data
-
-data_fahrzeug_OEM1_Typ12 <- read_csv("./Data/Fahrzeug/Fahrzeuge_OEM1_Typ11.csv",col_types = cols(X1= col_integer(), ID_Fahrzeug=col_character(), Produktionsdatum= col_date(format = ""), Herstellnumer= col_integer(), Fehlerhaft=col_skip(), Fehlerhaft_Datum=col_character(), Fehlerhaft_Fahrleistung=col_integer()))# Import data
-
 # Import Komponente K1DI1
-
 data_komponente_k1di1 <- read_csv("./Data/Komponente/Komponente_K1DI1.csv",
 col_types = cols(ID_Motor.y=col_character(),
                  Produktionsdatum.y=col_date(format = ""), Herstellernummer.y=col_integer(),
@@ -69,11 +66,14 @@ col_types = cols(ID_Motor.y=col_character(),
                  Fehlerhaft_Fahrleistung=col_integer()))
 ```
 
-Besides, it is necessary to find the location of the vehicles in Germany. for that additional data sets have the required information. "OpenGeoDB_bundesland_plz_ort_de (1)", "Zulassungen_alle_Fahrzeuge" and "Geodaten_Gemeinden_v1.2_2017-08-22_TrR" are imported by the "readr" package and the "readexcel" package. For "OpenGeoDB_bundesland_plz_ort_de (1)" contains the information about the German state, places and postcode. Unfortunately, the data set is missing the place "Seeg", which was added by hand. This missing data was found by the later joining and evaluating the structure of the data set. Furthermore place obervations sometimes contains  numbers, which were deleted by the use of the "tm" package. "Zulassungen_alle_Fahrzeuge" contains the data, where the cars got the admission. There, the location has to be cleaned by eliminating additional numbers and convert the word with one big capital letter. "Geodaten_Gemeinden_v1.2_2017-08-22_TrR" contains the location, postal code and the longitude and latitude of the location, which is very important for developing the Shiny App. 
-An overview illustrates the following table:
+Besides, it is necessary to find the location of the vehicles in Germany. Additional data sets have the required information for this. "OpenGeoDB_bundesland_plz_ort_de (1)", "Zulassungen_alle_Fahrzeuge" and "Geodaten_Gemeinden_v1.2_2017-08-22_TrR" are imported by the "readr" package and the "readexcel" package.
+"OpenGeoDB_bundesland_plz_ort_de (1)" contains the information about the German state, places and postcode.
+"Zulassungen_alle_Fahrzeuge" contains information about the vehicle ID, the location and the date of registration.
+"Geodaten_Gemeinden_v1.2_2017-08-22_TrR" contains the location, postal code as well as the longitude and latitude of the location, which is very important for developing the Shiny App. 
+An overview is given by the following table:
 
 
-```{r import location,echo = FALSE,warning = FALSE,message=FALSE}
+```{r import location, warning = FALSE, message=FALSE}
 # Import Location and Zulassung
 
 data_bundesland_plz_ort <- read_excel("./Data/Zulassungen/OpenGeoDB_bundesland_plz_ort_de (1).xls", col_names = c("Bundesland","PLZ","Ort"))
@@ -85,37 +85,36 @@ data_Zulassung <- read_csv2("./Data/Zulassungen/Zulassungen_alle_Fahrzeuge.csv")
 
 data_Geodaten_Gemeinden <- read_csv2("./Data/Geodaten/Geodaten_Gemeinden_v1.2_2017-08-22_TrR.csv",col_types =                                    cols(Postleitzahl=col_character(),Laengengrad=col_double(),Breitengrad=col_double()))
 ```
+# Data Preparation
+## Tidy
+In this section, the data sets are tidied up. Here, unnecessary columns are deleted, the format gets updated and additional information is added. 
 
-# Tidy
-In this section the data sets are tidy uped. Here unessesary columns are deleted, the format gets updated and additional information is added. 
-## Tidy vehicel data sets
-```{r}
+### Tidy vehicle data sets
+
+```{r tidy vehicle data, warning = FALSE, message= FALSE}
+#Delete unnecessary columns in two different data tables
 data_bestandteile_oem1_typ11$X1<- NULL # Delete unnecessary column
 
 data_bestandteile_oem1_typ12$X1<- NULL # Delete unnecessary column
 
-data_fahrzeug_OEM1_Typ11 <- data_fahrzeug_OEM1_Typ11[,c(-1,-2)]# Delete unnecessary column
-data_fahrzeug_OEM1_Typ11$Produktionsdatum <- as.Date(data_fahrzeug_OEM1_Typ11$Produktionsdatum,
-                                                     format = "%Y-%m-%d")# Transform col as date
-data_fahrzeug_OEM1_Typ11$Fehlerhaft_Datum <- as.Date(data_fahrzeug_OEM1_Typ11$Fehlerhaft_Datum,
-                                                     format = "%Y-%m-%d")# Transform col as date
 
-data_fahrzeug_OEM1_Typ12$Produktionsdatum <- as.Date(data_fahrzeug_OEM1_Typ12$Produktionsdatum,
-                                                     format = "%Y-%m-%d") # Transform col as date
-data_fahrzeug_OEM1_Typ12$Fehlerhaft_Datum <- as.Date(data_fahrzeug_OEM1_Typ12$Fehlerhaft_Datum,
-                                                     format = "%Y-%m-%d") # Transform col as date
-
-data_fahrzeug_OEM1_Typ12 <- data_fahrzeug_OEM1_Typ12[,c(-1,-2)]# Delete unnecessary column
 # Tidy Komponente K1DI1
+# Information was spread over several columns and had to be gathered into single columns
 data_komponente_k1di1 <- data_komponente_k1di1 %>%
-  select(ID_Motor.x,ID_Motor.y,ID_Motor,Produktionsdatum.x,Produktionsdatum.y,Produktionsdatum)%>%
-  gather('ID_Motor.x','ID_Motor.y','ID_Motor', key = "Motoren",value="ID_Motor_K1DI1", na.rm=TRUE) %>%
-  gather('Produktionsdatum.x','Produktionsdatum.y','Produktionsdatum', key = "Daten",value="Produktionsdatum_K1DI1", na.rm=TRUE)%>%
-  select(ID_Motor_K1DI1,Produktionsdatum_K1DI1)%>%
-  rename(ID_Motor=ID_Motor_K1DI1, Produktionsdatum=Produktionsdatum_K1DI1)
+  select(ID_Motor.x,ID_Motor.y,ID_Motor,Produktionsdatum.x,Produktionsdatum.y,Produktionsdatum)%>% # Select only relevant data columns
+  gather('ID_Motor.x','ID_Motor.y','ID_Motor', key = "Motoren",value="ID_Motor_K1DI1", na.rm=TRUE) %>% #Gather all engine IDs into one column
+  gather('Produktionsdatum.x','Produktionsdatum.y','Produktionsdatum', key = "Daten",value="Produktionsdatum_K1DI1", na.rm=TRUE)%>% #Gather all production dates of the engines into one column
+  select(ID_Motor_K1DI1,Produktionsdatum_K1DI1)%>% #Select only the columns with complete data
+  rename(ID_Motor=ID_Motor_K1DI1, Produktionsdatum=Produktionsdatum_K1DI1) #Rename those selected columns
 ```
-## Tidy gegraphical data sets
-```{r}
+### Tidy geographical data sets
+
+Unfortunately, the data set "data_bundesland_plz_ort" is missing the places "Seeg", "Roemhild", "Hoerselberg Hainich" and "Gruenhain Beierfeld", which are added by hand. This missing data was found by the later joining and evaluating the structure of the data set.
+The Community Mockrehna in Sachsen had a wrong post code which was then adapted by hand.
+Furthermore, place obervations sometimes contain  numbers, which were deleted by the use of the "tm" package.
+
+"Zulassungen_alle_Fahrzeuge" contains the data, where the cars got the admission. There, the location has to be cleaned by eliminating additional numbers. In addition, the letters have been changed from purely upper case to upper and lower case letters.
+```{r tidy geographical data, warning = FALSE, message= FALSE}
 # Tidy Bundesland Ort,PLZ
 data_bundesland_plz_ort <- data_bundesland_plz_ort%>% #import data
   add_row(Bundesland="Bayern",PLZ="87637",Ort="Seeg") %>% # add data to the data set
@@ -146,107 +145,79 @@ data_Geodaten_Gemeinden$Ort <- removeNumbers(data_Geodaten_Gemeinden$Ort) # Remo
 data_Geodaten_Gemeinden$Ort <- str_to_title(data_Geodaten_Gemeinden$Ort) # convert the word with one big capital letter
 data_Geodaten_Gemeinden <- data_Geodaten_Gemeinden[,c(-1,-2)] # Remove unnecessary column
 ```
-# Transforamtaion
-In this section the principles of data manipulation are used to get th compact datatset. Mostly the "dplyr" package is used.
+## Transforamtaion
+In this section, the principles of data manipulation are used to get a compact data set. Mostly, the "dplyr" package is used.
 
-## Data manipulation
+### Data manipulation
 
-The folowing data sets have to be manipulated:
+The following data sets have to be manipulated:
 
-* "Bestandteile OEM1 Typ11" (data_bestandteile_oem1_typ11 -> new_data_bestandteile_oem1_typ11): Here the diesel engine "K1DI1" is filtered out and just the two ID's (ID_Motor,ID_Fahrzeug) are selected for further analysis 
+* "Bestandteile OEM1 Typ11" (data_bestandteile_oem1_typ11 -> new_data_bestandteile_oem1_typ11): Here, the diesel engine "K1DI1" is filtered out and just the two ID's for the vehicle and the engine (ID_Motor,ID_Fahrzeug) are selected for further analysis
+
 * "Bestandteile OEM1 Typ12" (data_bestandteile_oem1_typ12 -> new_data_bestandteile_oem1_typ12):
-  Here the diesel engine "K1DI1" is filtered out and just the two ID's (ID_Motor,ID_Fahrzeug) are selected for further analysis
-* "Fahrzeug OEM Typ1"1" (data_fahrzeug_OEM1_Typ11 -> new_data_fahrzeug_OEM1_Typ11):
-  The vehicels from OEM1 Typ 11, which wer produced in the  production period 1 March 2008- 11 May 2012 are filtered out. Just ID_Motor and production date are elected for for the further evaluation.
-* "Fahrzeug OEM Typ12" (data_fahrzeug_OEM1_Typ12 -> new_data_fahrzeug_OEM1_Typ12):
-  The vehicels from OEM1 Typ 12, which wer produced in the  production period 1 March 2008- 11 May 2012 are filtered out. Just ID_Motor and production date are elected for for the further evaluation.
-* "Zulassung" (data_Zulassung -> new_data_Zulassung): First of all, the ID column(IDNummer)is renamed to ID_Fhrzueg just like the columname in the other data sets. ID_Fahrzeug,Ort,Zulassung are selected. Besides, a coloumn, named "ID_Fahrzeug_Nummer" is introduced. Here, The ID number is converted to an integer value by the "bit64" package. This step is necessary, because NA's were produced by joining the data sets by the ID number has a string.
-  
-The result is that for Typ 11 and Typ 12 there are two datasets. In one dataset is the diesel engine "K1DI1" and int the other dataset the production period of the faulty control units. Furthermore, the dataset Zulassung is updated for further steps. 
-```{r data manipulation, ,echo = FALSE,warning = FALSE,message=FALSE}
+  Here the diesel engine "K1DI1" is filtered out and just the two ID's for the vehicle and the engine (ID_Motor,ID_Fahrzeug) are selected for further analysis
+
+* "Komponente" (data_komponente_k1di1  -> new_data_komponente_k1di1 ): Here, the production date is filtered to find the engines that were produced between 1st March 2008 and 11th May 2012.
+
+* "Zulassung" (data_Zulassung -> new_data_Zulassung): First of all, the ID column (IDNummer) is renamed to ID_Fahrzeug, just like the column name in the other data sets. ID_Fahrzeug, Ort, Zulassung are selected. Besides, a colomn, named "ID_Fahrzeug_Nummer" is introduced.
+
+Now, all data sets are ready for joining.
+```{r data manipulation, warning = FALSE, message=FALSE}
 
 new_data_bestandteile_oem1_typ11 <- data_bestandteile_oem1_typ11 %>%
   filter(grepl("K1DI1",ID_Motor,fixed=TRUE))%>% # Filter after the relevant motor for more information : https://www.rdocumentation.org/packages/dplyr/versions/0.7.8/topics/filter
   select(ID_Motor,ID_Fahrzeug) #Select relevant coulums
   
 
-new_data_bestandteile_oem1_typ12 <- new_data_bestandteile_oem1_typ11 %>%
+new_data_bestandteile_oem1_typ12 <- data_bestandteile_oem1_typ12 %>%
   filter(grepl("K1DI1",ID_Motor,fixed=TRUE))%>% # Filter for relevant motor 
   select(ID_Motor,ID_Fahrzeug)# select necessary columns
-
-new_data_fahrzeug_OEM1_Typ11 <- data_fahrzeug_OEM1_Typ11 %>%
-  select(ID_Fahrzeug,Produktionsdatum)#%>% # select relevant columns
-  # filter(between(Produktionsdatum, as.Date("2008-03-01"),
-  #                                 as.Date("2012-05-11")))# Filter after the relevant time period for more information: https://stackoverflow.com/questions/28335715/r-how-to-filter-subset-a-sequence-of-dates
-  
-
-new_data_fahrzeug_OEM1_Typ12 <- data_fahrzeug_OEM1_Typ12 %>%
-  select(ID_Fahrzeug,Produktionsdatum)#%>% # select necessary columns
-  #filter(between(Produktionsdatum, as.Date("2008-03-01"), #Filter for relevant timeperiod
-                                  #as.Date("2012-05-11")))
 
 # Filter Engine K1DI1 for specified production dates
 new_data_komponente_k1di1 <- data_komponente_k1di1 %>%
   filter(between(Produktionsdatum, as.Date("2008-03-01"), #Filter for relevant timeperiod
-                                  as.Date("2012-05-11")))
+                                  as.Date("2012-05-11")))# Filter after the relevant time period for more information: https://stackoverflow.com/questions/28335715/r-how-to-filter-subset-a-sequence-of-dates
 
 # Transform data_Zulassung
 new_data_Zulassung <- data_Zulassung %>%
   rename(ID_Fahrzeug=IDNummer)%>% # Rename column for consistency
-  select(ID_Fahrzeug,Ort,Zulassung)%>% # Select relevant columns
-  mutate(ID_Fahrzeug_Nummer = as.integer64(str_replace_all(ID_Fahrzeug,"-",""))) # Add ID_Fahrzueg as integer column for further calculations
+  select(ID_Fahrzeug,Ort,Zulassung) # Select relevant columns
 
 ```
-## Joining
-In this step the final data set gets created. This process is divided up in different steps: Joining vehicle data, joining geographical data and last joining the two mentioned data sets together. 
+### Joining
+In this step, the final data set is created. This process is divided up into different steps: Joining all vehicle data, joining all geographical data and then joining these two data sets together. 
 
-Joining vehicle data:
+#### Joining vehicle data:
 
-* The data sets Bestandeile OEM1 Typ 11/12 are put together. Then the integer column "ID_Fahrzeug_Nummer" is introduced for later joining.
-* Same precedure with the data sets Fahrzeug OEM OEM1 Typ 11/12
-* Now the two datasets are leftjoined by the created column "ID_Fahrzeug_Nummer"
-The result is that the data set ""data_OEM" contains all cars with the diesel engine "K1DI1" and the unique vehicel number "ID_Fahrzeug", which were produced int the period 1 March 2008 - 11 May 2012.
+* The data sets Bestandteile OEM1 Typ 11/12 are put together.
+* Then the Komponente data set is leftjoined with Bestandteile OEM1 by the vehicle ID
 
-```{r}
+The result is that the data set "data_vehicle" contains all relevant vehicle information.
+
+```{r joining vehicle data, warning = FALSE, message= FALSE}
 #Summarise datatset bestandteile from oem1 Typ 11/12
 data_bestandteile_OEM1 <- bind_rows(new_data_bestandteile_oem1_typ11, 
-                                    new_data_bestandteile_oem1_typ12)%>% # Get one date set from Type 11 and type 12
-  mutate(ID_Fahrzeug_Nummer= as.integer64(str_replace_all(ID_Fahrzeug,"-","")))# Get integer value for later join
+                                    new_data_bestandteile_oem1_typ12) # Get one date set from Type 11 and type 12
+
 
 #Joining Komponente K1DI1 and Bestandteile OEM
-data_komponente <- left_join(new_data_komponente_k1di1, data_bestandteile_OEM1, by="ID_Motor")%>%
+data_vehicle <- left_join(new_data_komponente_k1di1, data_bestandteile_OEM1, by="ID_Motor")%>%
   drop_na()%>%
   distinct()
 
-#Summarise datatset Fahrzeug from oem1 Typ 11/12
-data_fahrzeug_OEM1 <- bind_rows(new_data_fahrzeug_OEM1_Typ11,
-                                new_data_fahrzeug_OEM1_Typ12)%>% # Get one date set from Type 11 and type 12
-  mutate(ID_Fahrzeug_Nummer= as.integer64(str_replace_all(ID_Fahrzeug,"-","")))# Get integer value for later join    
-
-# One data set for OEM
-data_OEM <- left_join(data_fahrzeug_OEM1,data_bestandteile_OEM1,
-                       by="ID_Fahrzeug_Nummer",na_matches="never")%>%# Get Dataset to get engine and production date. Dealing with NA see: https://stackoverflow.com/questions/58454706/how-do-i-fix-error-stdbad-alloc-message-when-using-dplyr-full-join-to-join-3
-            rename(ID_Fahrzeug = ID_Fahrzeug.x)
-data_OEM <- data_OEM[!is.na(data_OEM$ID_Motor),]
-
-# Deleting duplicate rows: https://dplyr.tidyverse.org/reference/distinct.html
-data_OEM <- distinct(data_OEM)
-  
-data_OEM$ID_Fahrzeug.y <- NULL # delete extra column after joining
-
 # Graphical illustration:
-graph_data_OEM <- data_OEM%>%
+graph_data_vehicle <- data_vehicle%>%
   head(5)
-kable(graph_data_OEM, caption = "Summary: Vehicel Data")
+kable(graph_data_vehicle, caption = "Summary: Vehicle Data")
 ```
 
-Joining geographical data:
+#### Joining geographical data:
 
-
-* The Data sets "Gemeinden" and "Bundesland" are leftjoined by the postal code. 
-* To the result another column is added, which shows the distance between Hamburg and any location in the data set.
-* The result is a bundeled data set. Within are locations, longitude, latitude, postal code. Next The data set is merged * Finally, the result is leftjoined by postal code with Zulassung. Now every vehical has a location 
-```{r final data,warning = FALSE,message=FALSE}
+* The Data sets "Gemeinden" and "Bundesland" are leftjoined by the postal code. As some German states share postcal codes, some cities/communities are assigned a wrong state. For instance, this is the case for Oststeinbek and Stapelfeld which are both located in Schleswig-Holstein but are assigned the state Hamburg, as they are right next to the city.
+* To the resulting data set, another column is added, which shows the distance between Hamburg and any location in the data set.
+* The result is a bundled data set containing locations, longitude, latitude and the postal code. Next, the data set is merged
+* Finally, the result is leftjoined by postal code with Zulassung. Now, every vehicle has a location.
+```{r joining geographical data, warning = FALSE, message=FALSE}
 
 
 # One data set for location
@@ -278,28 +249,23 @@ graph_data_ort <- data_Ort%>%
   head(5)
 
 kable(graph_data_ort,caption="Summary: Geographical Data ")
+```
+# Creation of final detaset
 
-# get final dataset by joining location and OEM data set
-final_data_Group_50 <- left_join(data_OEM,data_Ort,by="ID_Fahrzeug_Nummer")%>%# Joining cars with Zulassung
-  rename(ID_Fahrzeug = ID_Fahrzeug.x)
-  
+To create the final data set, the *vehicle data* set is joined with the *geographical data*. Also, a new column is added to the data set which displays the total number of affected cars in a city/community.
+The last step is to save the final data set.
+
+
+```{r final data, warning = FALSE, message=FALSE}
+# Final Dataset
+final_data_Group_50 <- left_join(data_vehicle,data_Ort,by="ID_Fahrzeug")
+                                 
 number_towns <- final_data_Group_50%>%  
   count(Ort)
-
-final_data_Group_50_V2 <- left_join(final_data_Group_50,number_towns,by="Ort")%>%
+final_data_Group_50 <- left_join(final_data_Group_50,number_towns,by="Ort")%>%
   distinct(ID_Fahrzeug, .keep_all=TRUE)
 
-final_data_Group_50$ID_Fahrzeug.y <- NULL # delete extra column after joining
-final_data_Group_50$ID_Fahrzeug_Nummer <- NULL
-
-# Final Dataset with Komponente
-final_data_Group_50_K <- left_join(data_komponente,data_Ort,by="ID_Fahrzeug")
-number_towns_2 <- final_data_Group_50_K%>%  
-  count(Ort)
-final_data_Group_50_K <- left_join(final_data_Group_50_K,number_towns_2,by="Ort")%>%
-  distinct(ID_Fahrzeug, .keep_all=TRUE)
-
-save(final_data_Group_50_K, file="final_data_Group_50_K.Rda")
+save(final_data_Group_50, file="final_data_Group_50.Rda")
 
 
 # delete duplicate rows
