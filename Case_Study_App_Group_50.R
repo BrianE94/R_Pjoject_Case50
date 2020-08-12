@@ -188,17 +188,17 @@ server <- function(input, output, session) {
                                 #Separating lines by a break, source: https://stackoverflow.com/questions/26368192/how-to-insert-new-line-in-r-shiny-string
                                 sep="<br/>")
                    )%>%
-        #Adds Radius/ Circle arround Hamburg to the map
+        #Adds marker for Hamburg to the map
         addMarkers(lng=9.993682, lat=53.551085, icon=hamburg_marker)
         
-        
+        #Adds Radius/ Circle arround Hamburg to the map
         rad <- as.integer(c(input$n_1,input$n_2,input$n_3,input$n_4,input$n_5,input$n_6))*1000
         rad_frame <- data.frame(rad, "index"=c(1:6))
         #Color platte for coloring circles with different radius
         #https://rstudio.github.io/leaflet/colors.html
         #https://cfss.uchicago.edu/notes/leaflet/
         pal <- colorFactor("Dark2", rad_frame$index)
-        my_map <- addCircles(map=my_map, data=rad_frame, lng=9.993682, lat=53.551085,radius = ~rad, fillOpacity = 0.02, color = ~pal(rad_frame$index), fillColor = ~pal(rad_frame$index))
+        my_map <- addCircles(map=my_map, data=rad_frame, lng=9.993682, lat=53.551085,radius = ~rad, fillOpacity = 0.02, color = ~pal(rad_frame$index), fillColor = ~pal(rad_frame$index), group="Clustered Markers")
         
         #Layer 2 Cities of Interest 
         my_map <- addMarkers(map=my_map, data = anzahl (),
