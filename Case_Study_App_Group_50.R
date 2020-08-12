@@ -18,10 +18,9 @@ install_load("shiny", "leaflet", "htmltools", "highcharter", "ggplot2", "maps", 
 
 #load saved dataframe from Case_Study_Group_50.Rmd
 load(file="final_data_Group_50.Rda")
-load(file="final_data_Group_50_K.Rda")
 
 #test: First run with 1000  
-test <- final_data_Group_50_K%>%
+test <- final_data_Group_50%>%
   head(10000)
 
 
