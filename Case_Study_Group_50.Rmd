@@ -363,7 +363,9 @@ The **basic dataset** proves all visualizations. The attributes displayed are al
 ![](https://64.media.tumblr.com/daeb48074cf59eb314b6b6cf9e26343d/6f3e139bb8a6e69e-b8/s2048x3072/4ae834817377077b74a06d9c117d1d2a8b92e7e6.png)
 
 ![Basic Dataset](https://64.media.tumblr.com/4effbcdf1b1ae51ac1958a4a024939d6/6f3e139bb8a6e69e-c8/s2048x3072/3e7c3953af22cdefdbdfc4a77d6e2ab18dba547d.png)
+### Problems with the Shiny-App
 
+The processing effort for the computer is enormously high, which is why the app sometimes crashes, especially when multiple radii are selected. Hence, a powerful computer is needed to run and use the app without problems.
 
 # Results
 
