@@ -301,12 +301,12 @@ Since the user is supposed to be able to choose a number of radii, we used a sel
 Depending on the number of radii chosen, there has to be a variable number of inputSliders to choose the radius for each perimeter. Therefore, we added conditionalPanels depending on the given selectInput.
 We also added a sliderInput so that the user can assign a critical amount of affected vehicles.
 
-![sidebarPanel, color accents in "grass-green"](https://64.media.tumblr.com/31271117f5e7076502540d9a2de28bd9/6f3e139bb8a6e69e-d3/s640x960/61918ef790eaa10b620a952e782385baff6be772.jpg){height=25%, width=25%}
+![*sidebarPanel, color accents in "grass-green"*](https://64.media.tumblr.com/31271117f5e7076502540d9a2de28bd9/6f3e139bb8a6e69e-d3/s640x960/61918ef790eaa10b620a952e782385baff6be772.jpg){height=25%, width=25%}
 
 In the **mainPanel**, the outputs are displayed and it contains a logo, as demanded.
 The mainPanel contains four tabPanels, i.e. a map, a barplot, a table, and the basic dataset to prove all visualizations.
 
-![mainPanel on the right-hand side of the sidePanel consisting of four tabs (map, barplot, table, basic dataset)](https://64.media.tumblr.com/63a5bb9db39bdba1e4193e638a4a4c07/6f3e139bb8a6e69e-e5/s2048x3072/0e12408c59d925d7f62c0f46486730b4cc30300c.jpg)
+![*mainPanel on the right-hand side of the sidePanel consisting of four tabs (map, barplot, table, basic dataset)*](https://64.media.tumblr.com/63a5bb9db39bdba1e4193e638a4a4c07/6f3e139bb8a6e69e-e5/s2048x3072/0e12408c59d925d7f62c0f46486730b4cc30300c.jpg)
 
 ### Server
 
@@ -314,29 +314,34 @@ In the server, outputs are created and the requested visualizations are generate
 
 #### Map
 
-The **map** ist divided into the two groups *Clustered Markers* and *Cities of Interest*. If not interested in one of the groups, the user can hide it and focus on the information he needs. A golden marker is set to the city center of Hamburg because this is the reference point for the analysis.
+The **map** ist divided into the two groups **Clustered Markers** and **Cities of Interest**. If not interested in one of the groups, the user can hide it and focus on the information he needs. A golden marker is set to the city center of Hamburg because this is the reference point for the analysis.
 
-![The Map showing three concentric circles around Hamburg and displaying all cities with at least 5000 affected vehicles](https://64.media.tumblr.com/8543c11e3dd97dd09213a16137d23d12/4667e59bc43749fe-28/s2048x3072/ab85dbfcddbeb9f8ad0e9645a761fa782d9f19be.jpg)
+![*The Map showing three concentric circles around Hamburg and displaying all cities with at least 5000 affected vehicles*](https://64.media.tumblr.com/8543c11e3dd97dd09213a16137d23d12/4667e59bc43749fe-28/s2048x3072/ab85dbfcddbeb9f8ad0e9645a761fa782d9f19be.jpg)
 
 In the **Clustered Markers** group, the concentric perimeters around Hamburg are visualized. Cities and communities are clustered and the number of affected cars is being displayed. Clustered markers are used because it is the most effective way to display the affected vehicles with a minimum of computing effort.
 By clicking on the number of a cluster, the map zooms into the borders of the cluster. When the maximum zoom is reached, clicking on the number of the cluster causes blue markers for each vehicle to pop up. When clicking on these markers, there is a popup containing information about the Vehicle ID of the affected vehicle, when the faulty engine was produced and distance of the city/community from the city center of Hamburg.
 
 
 
-![Blue Markers in one location](https://64.media.tumblr.com/105bc118144af4d41dda099281bd9e9d/ce071781b55eae41-a6/s1280x1920/1ce7a42c3fcb393ea14d6117fda5da7bd7b67d63.jpg){height=50%, width=50%}
-![Popup containing relevant information](https://64.media.tumblr.com/af4c83fc16df74d529459b90006882b4/ce071781b55eae41-1a/s1280x1920/ffec34028454c2f42fd86545554b6805b6dd5045.jpg){height=50%, width=50%}
+![*Blue Markers in one location*](https://64.media.tumblr.com/105bc118144af4d41dda099281bd9e9d/ce071781b55eae41-a6/s1280x1920/1ce7a42c3fcb393ea14d6117fda5da7bd7b67d63.jpg){height=50%, width=50%}
+
+![*Popup containing relevant information*](https://64.media.tumblr.com/af4c83fc16df74d529459b90006882b4/ce071781b55eae41-1a/s1280x1920/ffec34028454c2f42fd86545554b6805b6dd5045.jpg){height=50%, width=50%}
 
 
 In the **Cities of Interest** group, cities/communities are highlighted with a red marker if the critical number of affected vehicles specified by the user is reached or exceeded. When the user hovers over the marker with the cursor, a label is displayed which provides information on how many vehicles are affected in this city.
 
-![Cities of Interest, the critical amount is the default value of 5000 vehicles. Number of affected vehicles is displayed for Dresden](https://64.media.tumblr.com/d64ad4d9688700569c5c7099b7ef2c1b/9174b12a8e613924-5f/s2048x3072/baf7aacb88647f8f5686c972f4d6b26e9120307a.png)
-The sliderInput which defines the critical number ranges from 500 to 7500 and can be increased or decreased in steps of one hundred. This facilitates the user to select appropriate values.
+![*Cities of Interest, the critical amount is the default value of 5000 vehicles. Number of affected vehicles is displayed for Dresden*](https://64.media.tumblr.com/d64ad4d9688700569c5c7099b7ef2c1b/9174b12a8e613924-5f/s2048x3072/baf7aacb88647f8f5686c972f4d6b26e9120307a.png)
 
-There are 94 cities/communities with more than 500 affected vehicles. Displaying this many markers does not give a clear overview.
-![Cities with at least 500 affected vehicles](https://64.media.tumblr.com/85fe3c32a56261e238bc62eb547654da/9174b12a8e613924-a8/s2048x3072/cce2484fcf1a8ef542f900dacb6d57182f1dd732.jpg){height=50%, width=50%}
+The sliderInput which defines the critical number ranges from 500 to 7500 and can be increased or decreased in steps of one hundred. This facilitates the user to select appropriate values. The default is set to 5000.
+
+![*Cities with at least 500 affected vehicles*](https://64.media.tumblr.com/85fe3c32a56261e238bc62eb547654da/9174b12a8e613924-a8/s2048x3072/cce2484fcf1a8ef542f900dacb6d57182f1dd732.jpg)
+
+There are 94 cities/communities with more than 500 affected vehicles. Displaying this many markers does not give a very clear overview which is why this is chosen to be the lowest critical number the user can select.
+
+
+![*Cities with at least 7500 affected vehicles*](https://64.media.tumblr.com/4045665e0978569c28b5bfe22cfb08d1/9174b12a8e613924-12/s2048x3072/17ad22060ce3e897fe8acc6aed367d63d119898b.jpg)
+
 There are only 4 cities with at least 7500 affected vehicles. This critical number is chosen as the highest slider value as it makes little sense to filter any further.
-![Cities with at least 7500 affected vehicles](https://64.media.tumblr.com/4045665e0978569c28b5bfe22cfb08d1/9174b12a8e613924-12/s2048x3072/17ad22060ce3e897fe8acc6aed367d63d119898b.jpg){height=50%, width=50%}
-
 
 #### Barplot
 
@@ -344,9 +349,9 @@ The **barplot** shows the number of registered affected vehicles within each rad
 
 The title of the plot, the legend and the axis titles are colored in grass-green.
 
-![Barplot for 6 radii ranging from 50km to 700km](https://64.media.tumblr.com/152e2383f010814689983b83e4d5b0b1/6f3e139bb8a6e69e-8b/s2048x3072/a7dab3f0b933ec200d31bf49072ab41af53e8bfc.jpg)
+![*Barplot for 6 radii ranging from 50km to 700km*](https://64.media.tumblr.com/152e2383f010814689983b83e4d5b0b1/6f3e139bb8a6e69e-8b/s2048x3072/a7dab3f0b933ec200d31bf49072ab41af53e8bfc.jpg)
 
-![Barplot for 3 radii ranging from 50km to 250km](https://64.media.tumblr.com/63a5bb9db39bdba1e4193e638a4a4c07/6f3e139bb8a6e69e-e5/s2048x3072/0e12408c59d925d7f62c0f46486730b4cc30300c.jpg)
+![*Barplot for 3 radii ranging from 50km to 250km*](https://64.media.tumblr.com/63a5bb9db39bdba1e4193e638a4a4c07/6f3e139bb8a6e69e-e5/s2048x3072/0e12408c59d925d7f62c0f46486730b4cc30300c.jpg)
 
 #### Table
 
@@ -354,7 +359,7 @@ The **table** supports the barplot by showing the number of affected vehicles wi
 
 Sorting of rows has been disabled, as the cases in radius 1 shall determine the order of States. Pagination has been disabled so all information can be found on one page. Rows are not numbered as this would be unnecessary.
 
-![Table](https://64.media.tumblr.com/178eb1228da7603a49a4b66fd55fcee9/81ccbcdac813a100-95/s2048x3072/469d29810afb27db8b856e11f0bd32ee344f9f44.jpg)
+![*Table supporting the barplot*](https://64.media.tumblr.com/178eb1228da7603a49a4b66fd55fcee9/81ccbcdac813a100-95/s2048x3072/469d29810afb27db8b856e11f0bd32ee344f9f44.jpg)
 
 #### Basic Dataset
 
@@ -362,7 +367,8 @@ The **basic dataset** proves all visualizations. The attributes displayed are al
 
 ![](https://64.media.tumblr.com/daeb48074cf59eb314b6b6cf9e26343d/6f3e139bb8a6e69e-b8/s2048x3072/4ae834817377077b74a06d9c117d1d2a8b92e7e6.png)
 
-![Basic Dataset](https://64.media.tumblr.com/4effbcdf1b1ae51ac1958a4a024939d6/6f3e139bb8a6e69e-c8/s2048x3072/3e7c3953af22cdefdbdfc4a77d6e2ab18dba547d.png)
+![*Basic Dataset*](https://64.media.tumblr.com/4effbcdf1b1ae51ac1958a4a024939d6/6f3e139bb8a6e69e-c8/s2048x3072/3e7c3953af22cdefdbdfc4a77d6e2ab18dba547d.png)
+
 ### Problems with the Shiny-App
 
 The processing effort for the computer is enormously high, which is why the app sometimes crashes, especially when multiple radii are selected. Hence, a powerful computer is needed to run and use the app without problems.
@@ -373,13 +379,15 @@ The processing effort for the computer is enormously high, which is why the app 
 
 As the first driving bans for diesel vehicles were introduced in Hamburg, the Hamburg area is analysed in more detail. The city of Hamburg itself has no cases of affected vehicles. If a radius of 25km around the city center of Hamburg is being searched, 3345 cases can be found. These cases spread in the German states Niedersachsen and Schleswig-Holstein.
 
-![Map of cases around Hamburg](https://64.media.tumblr.com/00a51a8724a15fcc69c2db57355922cd/959083ca899123ac-1b/s2048x3072/7753f0e5c9f9b1d754e1310b3a12995f52358c00.jpg)
-![Cases around Hamburg per State](https://64.media.tumblr.com/cc8a7c98d0d5621e0df8c1d35b13e96b/d975d2cdd4f45eb1-0d/s2048x3072/b187d1aa989def606ffb1c6d81a6cd836b8c4624.jpg)
+![*Map of cases around Hamburg*](https://64.media.tumblr.com/00a51a8724a15fcc69c2db57355922cd/959083ca899123ac-1b/s2048x3072/7753f0e5c9f9b1d754e1310b3a12995f52358c00.jpg)
+
+![*Cases around Hamburg per State*](https://64.media.tumblr.com/cc8a7c98d0d5621e0df8c1d35b13e96b/d975d2cdd4f45eb1-0d/s2048x3072/b187d1aa989def606ffb1c6d81a6cd836b8c4624.jpg)
 
 
 Though the table shows some cases for Hamburg, the City itself does not have any affected vehicles. This is a mistake due to shared postal codes between Hamburg and Schleswig-Holstein. All 208 cases are in Oststeinbek and Stapelfeld, which are right next to districts of Hamburg.
 
-![178 cases in Oststeinbek and 30 cases in Stapelfeld](https://64.media.tumblr.com/e49d8fd41cca2e9de216cba74163a136/19bc1f6a5a317393-0c/s2048x3072/2802ec65826c64322cb5f4841939dc7ebd04e649.jpg)
+![*178 cases in Oststeinbek and 30 cases in Stapelfeld*](https://64.media.tumblr.com/e49d8fd41cca2e9de216cba74163a136/19bc1f6a5a317393-0c/s2048x3072/2802ec65826c64322cb5f4841939dc7ebd04e649.jpg)
+
 For furhter information about affected vehicles for a larger radius around Hamburg, the Shiny-App can be used.
 
 ## Highly affected cities
@@ -387,7 +395,8 @@ For furhter information about affected vehicles for a larger radius around Hambu
 Since a driving ban might be implemented for further cities, it is examined which cities have a certain amount of affected vehicles.
 When the critical number of affected vehicles is set to 5000, 8 cities are highlighted.
 
-![8 Cities with at least 5000 affected vehicles](https://64.media.tumblr.com/c45d5d3890048a9db266637774248344/64cb2ae8ccf674b5-99/s2048x3072/af9518e288e14d9be468133bea92c93680aa1926.jpg)
+![*8 Cities with at least 5000 affected vehicles*](https://64.media.tumblr.com/c45d5d3890048a9db266637774248344/64cb2ae8ccf674b5-99/s2048x3072/af9518e288e14d9be468133bea92c93680aa1926.jpg)
+
 These cities are:
 
 City | Affected Vehicles
