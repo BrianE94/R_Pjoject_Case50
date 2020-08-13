@@ -42,7 +42,7 @@ ui <- fluidPage(
     ),
     # Application title
     headerPanel("Car Recall Action"),
-    # Adding a theme
+    # Adding a theme that harmonizes with the corporate color
     theme = shinythemes::shinytheme('sandstone'),
     # How to change the color of slider inputs: https://www.rdocumentation.org/packages/shinyWidgets/versions/0.5.3/topics/setSliderColor
     setSliderColor(c("#698b47", "#698b47","#698b47","#698b47","#698b47", "#698b47", "#698b47","#698b47","#698b47","#698b47","#698b47", "#698b47","#698b47","#698b47","#698b47","#698b47", "#698b47","#698b47","#698b47","#698b47", "#698b47", "#698b47"), c(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22)),
@@ -137,6 +137,8 @@ server <- function(input, output, session) {
     })
     
     #Define new dataset for reactive function anzahl because otherwise, the app crashes
+    #This is used to find all Cities of Interest that have a certain amount of affected vehicles
+    #It needs to be reactive so when the user changes to critical number, the number of highlighted cities also changes
     cities_amount <- test%>%
       distinct(Ort, .keep_all=TRUE)
     
@@ -158,6 +160,7 @@ server <- function(input, output, session) {
         iconAnchorX = 25/2, iconAnchorY = 41
       )
       
+      #This marker is used to higlight the Cities of Interest
       auto_marker <- makeIcon(
         iconUrl = "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png",
         iconWidth = 15, iconHeight = 25,
@@ -206,7 +209,7 @@ server <- function(input, output, session) {
                   lat=~Breitengrad,
                   group="Cities of Interest",
                   icon = auto_marker,
-                  ##Choosing labels rather than because we prefer information being displayed when hovering above the marker, Source:https://rstudio.github.io/leaflet/popups.html
+                  #Choosing labels rather than because we prefer information being displayed when hovering above the marker, Source:https://rstudio.github.io/leaflet/popups.html
                   label=~paste("Number of affected vehicles in ",
                                Ort,
                                ":",
@@ -441,10 +444,10 @@ server <- function(input, output, session) {
     output$basic_dataset <- renderDataTable({
       datatable(rownames = FALSE,
                 test %>%
-                  mutate(dist_zu_ham = dist/1000)%>%
-                  select(Ort, Bundesland, Laengengrad, Breitengrad, ID_Motor,Produktionsdatum, ID_Fahrzeug, Zulassung, dist_zu_ham, n)%>%
-                  arrange(Ort)%>%
-                  rename("City/Community" = Ort, State = Bundesland, Longitude = Laengengrad, Latitude = Breitengrad, "Distance to Hamburg in km" = dist_zu_ham, "Vehicle ID" = ID_Fahrzeug, "Production Date of the Motor" = Produktionsdatum, "Registration Date of the Vehicle" = Zulassung, "Motor ID" = ID_Motor, "Cases in City/Community"=n)
+                  mutate(dist_zu_ham = dist/1000)%>% #Distance to Hamburg is converted from meters to kilometers
+                  select(Ort, Bundesland, Laengengrad, Breitengrad, ID_Motor,Produktionsdatum, ID_Fahrzeug, Zulassung, dist_zu_ham, n)%>% #only necessary attributes are selected and thereby rearranged
+                  arrange(Ort)%>% #rows are arranged by Ort name
+                  rename("City/Community" = Ort, State = Bundesland, Longitude = Laengengrad, Latitude = Breitengrad, "Distance to Hamburg in km" = dist_zu_ham, "Vehicle ID" = ID_Fahrzeug, "Production Date of the Motor" = Produktionsdatum, "Registration Date of the Vehicle" = Zulassung, "Motor ID" = ID_Motor, "Cases in City/Community"=n) #Variables are renamed from German to English
                 )
     })
     
