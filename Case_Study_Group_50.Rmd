@@ -240,7 +240,7 @@ graph_data_ort <- data_Ort%>%
 
 kable(graph_data_ort,caption="Summary: Geographical Data ")
 ```
-# Creation of final detaset
+# Creation of final dataset
 
 To create the final data set, the *vehicle data* set is joined with the *geographical data*. Also, a new column is added to the data set which displays the total number of affected cars in a city/community.
 The last step is to save the final data set.
