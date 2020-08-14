@@ -19,12 +19,11 @@ install_load("shiny", "leaflet", "htmltools", "highcharter", "ggplot2", "maps", 
 #load saved dataframe from Case_Study_Group_50.Rmd
 load(file="final_data_Group_50.Rda")
 
-#test: First run with 1000  
-test <- final_data_Group_50#%>%
-  #head(10000)
+#assign loaded dataset to new dataset called 'test' used throughout the whole app 
+test <- final_data_Group_50
 
 
-# Define UI for application that draws a histogram
+# Define UI for application 
 ui <- fluidPage(
     #change font https://shiny.rstudio.com/articles/css.html
     tags$head(
@@ -51,9 +50,9 @@ ui <- fluidPage(
       #Creating Sidebar
       sidebarPanel(
       # Radius Input
-        #selectInput("value", "Select Radius in km:", c(seq(25000, 700000, by=25000)), selected=50000, multiple=TRUE, width = 150), 
         #multiple choice number of radius
         selectInput("number", "Select number of radii to compare", c(1:6), width= 200),
+        #using conditional panels to only show selected amount of sliders for selecting radius
         conditionalPanel(
           condition = "input.number == 1",
           sliderInput("n_1","Select Radius 1 in km", min=25, max = 700, step = 25, value= 50)
@@ -93,21 +92,22 @@ ui <- fluidPage(
           sliderInput("n_5_6","Select Radius 5 in km", min=0, max = 700, step = 25, value= 400),
           sliderInput("n_6","Select Radius 6 in km", min=0, max = 700, step = 25, value= 500)
         ),
-        # Add user input to highlight cities and communities with a certain amount of affected vehicles (4.d)
+        # Add user input to highlight cities and communities with a certain amount of affected vehicles 
         sliderInput("anzahl", "Select a critical number to find all cities and communities with a certain amount of affected registered vehicles", min = 500, max = 7500, value = 5000, step = 100)
       ),
       #Creating MainPanel with Tabsets
       mainPanel(
+        #display logo
         uiOutput("Logo", align="right"),
         #Creating Tabsets 
         tabsetPanel(
           tabPanel("Map",leafletOutput("map") ),
           
-          #display renderPlot
+          #display Barplot
           tabPanel("Barplot",plotOutput("barplot")),
-          #display logo
-          
+          #display DataTable supporting the Barplot
           tabPanel("Table", dataTableOutput('datatable_rad')),
+          #display Basic Dataset
           tabPanel("Basic Dataset", dataTableOutput('basic_dataset'))
         )
       )
@@ -115,7 +115,7 @@ ui <- fluidPage(
 
 )
 
-# Define server logic required to draw a histogram
+# Define server logic 
 server <- function(input, output, session) {
     
     #image from URL https://stackoverflow.com/questions/45709189/renderimage-from-url-and-clickable
@@ -146,9 +146,6 @@ server <- function(input, output, session) {
       filter(cities_amount, n>=input$anzahl)
     })
     
-    
-    
-    observe(print(anzahl()))
 
     #map output 
     output$map <- renderLeaflet({
@@ -216,12 +213,7 @@ server <- function(input, output, session) {
                                n)
                    )
         #Add map controls for different groups/Layers 
-        my_map <- addLayersControl(map=my_map, overlayGroups = c("Clustered Markers","Cities of Interest"),options = layersControlOptions(collapsed = FALSE))
-        # groups_pos <- c("Clustered Markers","Cities of Interest")
-        # groups_sel <- input$map_groups
-        # groups_match <- groups_sel %in% groups_pos
-        # groups_hide <- groups_pos[!groups_match]
-        # my_map <- my_map %>% hideGroup(groups_hide)
+        my_map <- addLayersControl(map=my_map, overlayGroups = c("Clustered Markers","Cities of Interest"),options = layersControlOptions(collapsed = FALSE))%>% hideGroup("Cities of Interest")
     })
     
     #Save selected Layers 
@@ -232,7 +224,7 @@ server <- function(input, output, session) {
     })
     
     
-    #Change values on Number of Radius
+    #Change values on Number of Radius. Allows for values to stay the same when selecting a higher amount of radius to compare to 
     observe({
       if (input$number==1){
         # When radius 1 is set, it is also saved for when there is more than one radius but is still adjustable
@@ -356,7 +348,6 @@ server <- function(input, output, session) {
       }
     })
     
-    #---------------------------------------------------------------------------------------------------------------------------
 
     #Prepare Dataset due to max radius, only keep necessary info 
     get_basic_dataset <- reactive({
@@ -365,13 +356,13 @@ server <- function(input, output, session) {
       basic_rad
     })
     
-    
+    #get the values retrieved from the input sliders 
     inputvector <- reactive ({
       input_vector <- as.numeric(c(input$n_1,input$n_2,input$n_3,input$n_4,input$n_5,input$n_6))*1000
       input_vector
     })
     
-    #add observations for all selected radius
+    #add observations (amount of vehicles per radius) for all selected radius for displaying a datatable supporting the barplot
     get_dataset_all <- reactive({
       n_1_filtered <- filter(get_basic_dataset(), dist <= inputvector()[1])%>%
         group_by(Bundesland)%>%
@@ -421,6 +412,7 @@ server <- function(input, output, session) {
       final_rad_all
     })
 
+    #output Datatable supporting barplot
     output$datatable_rad <- renderDataTable({
       datatable(
         # Disable pagination: https://shiny.rstudio.com/gallery/datatables-options.html
@@ -451,68 +443,23 @@ server <- function(input, output, session) {
                 )
     })
     
-    #barplot output
-    
-    #for advanced barplotting 
-    get_plot_dataset_advanced <- reactive({
-      final_rad_all_plot_advanced <- get_basic_dataset()
-      inputvector_sorted <- as.integer(inputvector())
-      names(inputvector_sorted)=c(1:6)
-      inputvector_sorted <- sort(inputvector_sorted,decreasing = FALSE)
-      inputvector_sorted[inputvector_sorted==0]<-NA
-      inputvector_sorted<-inputvector_sorted[!is.na(inputvector_sorted)]
-      #Problem wenn zwei oder mehrere Radien komplett gleich sind-> custom error message
-      #https://www.sitepoint.com/shiny-and-r-how-to-add-themes-and-customize-error-messages/
-      a <- if(TRUE %in% duplicated(inputvector_sorted)){FALSE}else{TRUE}
-      validate(
-       need(a !=FALSE, 
-        "All set Radius must be set unique, please change your input"
-         )
-      )
-      final_rad_all_plot_advanced$Radius <- cut(final_rad_all_plot_advanced$dist, c(0,inputvector_sorted),labels=names(inputvector_sorted))
-      final_rad_all_plot_advanced
-    })
-    
-    #factor for every single radius 
-    # Radius 1 always on the left-hand side and radius 6 always on the right-hand side --> sorting 
-    # accumulated cases
-    # filled by Bundesland
-    # 
+    #preparing a dataset for barplotting 
     get_plot_dataset_advanced_factor <- reactive({
       inputvector_import <- as.integer(inputvector())
       names(inputvector_import)=c(1:6)
-      #Sort Vector (not needed for now)
-      #inputvector_sorted <- sort(inputvector_sorted,decreasing = FALSE)
       inputvector_sorted <- inputvector_import
       inputvector_sorted[inputvector_sorted==0]<-NA
       inputvector_sorted <- inputvector_sorted[!is.na(inputvector_sorted)]
       #Get dataset 
       final_rad_all_plot_advanced_factor <- get_basic_dataset()
       
-      
+      #Radius 1
       if(input$number == 1|2|3|4|5|6){
         if(inputvector_import["1"]!=0){
           final_rad_all_plot_advanced_factor$Radius1 <- as.logical(cut(final_rad_all_plot_advanced_factor$dist, c(0,inputvector_sorted["1"]),labels=TRUE))
           final_rad_all_plot_advanced_factor$Radius1[final_rad_all_plot_advanced_factor$Radius1==TRUE]<-1
-          #summarise to One row for every Bundesland
-          final_rad_all_plot_advanced_factor <- final_rad_all_plot_advanced_factor%>%
-            group_by(Radius1, Bundesland)%>%
-            #mutate(count_rad1 = sum(Radius1))%>%
-            #summarise(count_rad1 = n())%>%
-            ungroup()
-          
-          #final_rad_all_plot_advanced_factor$count_rad1 <- final_rad_all_plot_advanced_factor$count_rad1 * final_rad_all_plot_advanced_factor$Radius1
         }
       }
-      # final_rad_all_plot_advanced_factor$Radius2 <- as.logical(cut(final_rad_all_plot_advanced_factor$dist, c(0,inputvector_sorted[2]),labels=TRUE))
-      # final_rad_all_plot_advanced_factor$Radius3 <- as.logical(cut(final_rad_all_plot_advanced_factor$dist, c(0,inputvector_sorted[3]),labels=TRUE))
-      # final_rad_all_plot_advanced_factor$Radius4 <- as.logical(cut(final_rad_all_plot_advanced_factor$dist, c(0,inputvector_sorted[4]),labels=TRUE))
-      # final_rad_all_plot_advanced_factor$Radius5 <- as.logical(cut(final_rad_all_plot_advanced_factor$dist, c(0,inputvector_sorted[5]),labels=TRUE))
-      # final_rad_all_plot_advanced_factor$Radius6 <- as.logical(cut(final_rad_all_plot_advanced_factor$dist, c(0,inputvector_sorted[6]),labels=TRUE))
-      
-      #Radius 1 Alternative zu cut()
-      # a<-final_rad_all_plot_advanced_factor$dist<=inputvector_sorted[1]
-      # final_rad_all_plot_advanced_factor$Radius1 <- a
       
       #Radius 2
       if(input$number == 2|3|4|5|6){
@@ -559,24 +506,8 @@ server <- function(input, output, session) {
     })
     
     
-    
-    #prepare dataset for plotting 
-    get_plot_dataset <- reactive({
-      final_rad_all_plot <- get_dataset_all()%>%
-        filter(Bundesland == "Sum")
-      name_cols <- colnames(final_rad_all_plot[-1])
-      print(name_cols)
-      #https://stackoverflow.com/questions/6778908/transpose-a-data-frame
-      final_rad_all_plot <- as.data.frame(t(final_rad_all_plot[,-1]))
-      colnames(final_rad_all_plot)<-"Anzahl"
-      #mutate(final_rad_all_plot, Namen=name_cols)
-      final_rad_all_plot$Namen <- name_cols
-      final_rad_all_plot
-    })
-    
-    
+    # Output Barplot 
     output$barplot <- renderPlot({
-      df1 <- get_plot_dataset_advanced()
       df2 <- get_plot_dataset_advanced_factor()
       p <- ggplot() +
         # Changing labels to English, changing Plot Theme, source: https://stackoverflow.com/questions/23635662/editing-legend-text-labels-in-ggplot
@@ -586,24 +517,15 @@ server <- function(input, output, session) {
               plot.title = element_text(size = 20, face = "bold", color = "#698b47"),
               legend.title = element_text(size = 16, color = "#698b47"),
               legend.text = element_text(size = 14))
-        #geom_bar(data=df1,aes(Radius, fill = Bundesland))
-        #if(Radius3 %in% colnames(df2)){geom_histogram(data = df2, aes(Radius))}
+      #plotting histogram for every single Radius and adding it to the ggplot
       p = p+geom_histogram(data = subset(df2, Radius1 %in% c(1)),aes(Radius1, fill=Bundesland),stat="count")
       if("Radius2" %in% colnames(df2)){p = p + geom_histogram(data = subset(df2, Radius2 %in% c(2)), aes(Radius2, fill=Bundesland),stat="count")}
       if("Radius3" %in% colnames(df2)){p = p + geom_histogram(data = subset(df2, Radius3 %in% c(3)), aes(Radius3, fill=Bundesland),stat="count")}
       if("Radius4" %in% colnames(df2)){p = p + geom_histogram(data = subset(df2, Radius4 %in% c(4)), aes(Radius4, fill=Bundesland),stat="count")}
       if("Radius5" %in% colnames(df2)){p = p + geom_histogram(data = subset(df2, Radius5 %in% c(5)), aes(Radius5, fill=Bundesland),stat="count")}
       if("Radius6" %in% colnames(df2)){p = p + geom_histogram(data = subset(df2, Radius6 %in% c(6)), aes(Radius6, fill=Bundesland),stat="count")}
-        #geom_histogram(data = df2,aes(Radius2, fill=Bundesland),stat="count")+ 
       p
     })
-    
-    
-    # output$barplot <- renderPlot({
-    #   df <- get_plot_dataset()
-    #   ggplot(df)+
-    #     geom_col(aes(Namen,Anzahl, fill=Anzahl))
-    # })
 }
 
 # Run the application 
