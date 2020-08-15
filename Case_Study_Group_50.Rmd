@@ -12,7 +12,8 @@ output:
 
 # Introduction
 
-The intention of this project is to find vehicles of "Type11" and "Type12" which have installed the faulty diesel engine "K1DI1". The defective engines were produced from 1 March 2008 to 11 May 2012.  The recall action will start in the Hamburg area, as the first diesel bans come into force there. 
+The intention of this project is to find vehicles of "Type11" and "Type12" for a **recall action** which have installed the faulty diesel engine "K1DI1". The defective engines were produced from 1 March 2008 to 11 May 2012.
+The recall action will start in the Hamburg area, as the first diesel bans come into force there. Also, critical cities and communities with a certain amount of registered, affected cars should be identified. 
 
 # Packages
 Install required packages.
@@ -44,7 +45,6 @@ Komponente_K1DI1  | Geodaten_Gemeinden_v1.2_2017-08-22_TrR
 The task is to find all relevant type 11 and type 12 vehicles with an engine "K1DI1" produced during the problematic period from the data tables OEM1. To get the required data for vehicles, the following files are imported by the "readr" package:
 "Bestandteile_Fahrzeuge_OEM1_Typ11","Bestandteile_Fahrzeuge_OEM1_Typ12" and "Komponente_K1DI1". Here, it is important to define the column types.
 The data tables "Bestandteile_Fahrzeuge_OEM1_Typ11", "Bestandteile_Fahrzeuge_OEM1_Typ12" contain the relevant "ID_Motor", which is needed to match the affected engines. The data table "Komponente_K1DI1" shows the production date of the engine which is needed to find the engines that were produced during the specified period.
-For easier handling of the data, redundant/unnecessary columns were detected and deleted after the import. 
 ```{r import vehicles, warning = FALSE, message= FALSE}
 # Import Bestabdteile OEM Typ 11/12
 data_bestandteile_oem1_typ11 <- read_csv2("./Data/Fahrzeug/Bestandteile_Fahrzeuge_OEM1_Typ11.csv", col_types = cols(X1=col_integer(),ID_Karosserie=col_character(),ID_Schaltung=col_character(),ID_Sitze=col_character(),ID_Motor=col_character(),ID_Fahrzeug=col_character())) # Import data
@@ -61,8 +61,6 @@ Besides, it is necessary to find the location of the vehicles in Germany. Additi
 "OpenGeoDB_bundesland_plz_ort_de (1)" contains the information about the German state, places and postcode.
 "Zulassungen_alle_Fahrzeuge" contains information about the vehicle ID, the location and the date of registration.
 "Geodaten_Gemeinden_v1.2_2017-08-22_TrR" contains the location, postal code as well as the longitude and latitude of the location, which is very important for developing the Shiny App. 
-An overview is given by the following table:
-
 
 ```{r import location, warning = FALSE, message=FALSE}
 # Import Location and Zulassung
@@ -180,7 +178,7 @@ In this step, the final data set is created. This process is divided up into dif
 #### Joining vehicle data:
 
 * The data sets Bestandteile OEM1 Typ 11/12 are put together.
-* Then the Komponente data set is leftjoined with Bestandteile OEM1 by the vehicle ID
+* Then, the Komponente data set is leftjoined with Bestandteile OEM1 by the vehicle ID
 
 The result is that the data set "data_vehicle" contains all relevant vehicle information.
 
@@ -238,7 +236,7 @@ data_Ort <- left_join(new_data_Zulassung,data_Ort2, by="Ort")
 graph_data_ort <- data_Ort%>%
   head(5)
 
-kable(graph_data_ort,caption="Summary: Geographical Data ")
+kable(graph_data_ort,caption="Summary: Geographical Data")
 ```
 # Creation of final dataset
 
@@ -263,13 +261,13 @@ save(final_data_Group_50, file="final_data_Group_50.Rda")
 graph_final_data_Group_50 <- final_data_Group_50%>%
   head(5)
 
-kable(graph_final_data_Group_50,caption="Summary: Geographical Data ")
+kable(graph_final_data_Group_50,caption="Summary: Final Dataset")
 ```
 
 
 # Evaluation
 
-After the data was prepared and merged into a final data set, we developed a Shiny-App to evaluate the data.
+After the data was prepared and merged into a final data set, a Shiny-App was developed to evaluate the data.
 
 ## Criteria for the Shiny-App
 
@@ -284,22 +282,22 @@ Develop a Shiny app and visualize the following:
 
 ## Implementing the App
 
-First, we loaded the shiny package and with install.load, we installed all further required R packages. Afterwards, we loaded the data set final_data_Group_50 which we had prepared in the steps before.
+First, the shiny package was loaded and with install.load, all further required R packages were installed and loaded. Afterwards, the data set final_data_Group_50, which was prepared in the steps before, was loaded.
 
 
 ### User Interface (UI)
 
-Then, we had to program the UI. As required, we changed the font and also the color of the App title.
-To adjust the layout to the color "grass-green" we had to find out which color or color code was meant by this color name as there were several options. We decided to use the code **#698b47** after https://www.britishstandardcolour.com/ or https://www.w3schools.com/colors/colors_british.asp .
+Then, the UI was programmed. As required, the font was changed.
+To adjust the layout to the color "grass-green" it needed to be determined which color or color code was meant by this color name as there were several options. It was decided to use the color code **#698b47** after https://www.britishstandardcolour.com/ or https://www.w3schools.com/colors/colors_british.asp .
 
-While designing the UI, we colored the title of the App as well as the input sliders in the color "Grass Green". We chose the shinytheme "sandstone" as the App theme because it harmonizes well with the corporate color.
+While designing the UI, the title of the App as well as the input sliders were colored in the color "Grass Green". The shinytheme "sandstone" was chosen as the App theme because it harmonizes well with the corporate color.
 
 The Layout is divided into a sidebarPanel and a mainPanel.
 
 The **sidebarPanel** contains adjustable inputs.
-Since the user is supposed to be able to choose a number of radii, we used a selectInput. Here, the user can choose between 1 to 6 radii.
-Depending on the number of radii chosen, there has to be a variable number of inputSliders to choose the radius for each perimeter. Therefore, we added conditionalPanels depending on the given selectInput.
-We also added a sliderInput so that the user can assign a critical amount of affected vehicles.
+Since the user is supposed to be able to choose a number of radii, a selectInput was used. Here, the user can choose between 1 to 6 radii.
+Depending on the number of radii chosen, there has to be a variable number of inputSliders to choose the radius for each perimeter. Therefore, conditionalPanels depending on the given selectInput were added.
+Moreover, a sliderInput was added so that the user can assign a critical amount of affected vehicles.
 
 ![*sidebarPanel, color accents in "grass-green"*](https://64.media.tumblr.com/31271117f5e7076502540d9a2de28bd9/6f3e139bb8a6e69e-d3/s640x960/61918ef790eaa10b620a952e782385baff6be772.jpg){height=25%, width=25%}
 
@@ -351,6 +349,8 @@ The title of the plot, the legend and the axis titles are colored in grass-green
 
 ![*Barplot for 6 radii ranging from 50km to 700km*](https://64.media.tumblr.com/152e2383f010814689983b83e4d5b0b1/6f3e139bb8a6e69e-8b/s2048x3072/a7dab3f0b933ec200d31bf49072ab41af53e8bfc.jpg)
 
+There are problems with the x-axis labeling because the plot is a histogram. These problems occur in case one, two, or six radii are selected. Still, the plot should be understandable for the user.
+
 ![*Barplot for 3 radii ranging from 50km to 250km*](https://64.media.tumblr.com/63a5bb9db39bdba1e4193e638a4a4c07/6f3e139bb8a6e69e-e5/s2048x3072/0e12408c59d925d7f62c0f46486730b4cc30300c.jpg)
 
 #### Table
@@ -371,7 +371,9 @@ The **basic dataset** proves all visualizations. The attributes displayed are al
 
 ### Problems with the Shiny-App
 
-The processing effort for the computer is enormously high, which is why the app sometimes crashes, especially when multiple radii are selected. Hence, a powerful computer is needed to run and use the app without problems.
+The **final data set contains more than 500000 affected vehicles**. Thus, the **processing effort** for the computer is **enormously high**, which is why the app sometimes crashes, especially when multiple radii are selected. Hence, a powerful computer is needed to run and use the app without problems.
+
+In the App-code in the lines 24-25, the data set used by the App is defined. If the App crashes when all data is used, the pipe operator and the head function can be uncommented (and thereby enabled) to work with a smaller data set. The head function can also be replaced by the tail function to look at the data at the bottom of the data set.
 
 # Results
 

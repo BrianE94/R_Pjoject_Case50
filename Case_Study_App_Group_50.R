@@ -19,9 +19,11 @@ install_load("shiny", "leaflet", "htmltools", "highcharter", "ggplot2", "maps", 
 #load saved dataframe from Case_Study_Group_50.Rmd
 load(file="final_data_Group_50.Rda")
 
-#assign loaded dataset to new dataset called 'test' used throughout the whole app 
-test <- final_data_Group_50
-
+#assign loaded dataset to new dataset called 'final_data' used throughout the whole app
+#in case the app crashes due to high processing efforts, disable comments and use only part of the dataset
+final_data <- final_data_Group_50%>%
+  head(100000)
+  #tail(100000)
 
 # Define UI for application 
 ui <- fluidPage(
@@ -132,14 +134,14 @@ server <- function(input, output, session) {
 
     # Make a reactive Radius
     distanz <- reactive({
-      test%>%
-        filter(test$dist <= as.numeric(max(as.integer(c(input$n_1,input$n_2,input$n_3,input$n_4,input$n_5,input$n_6))*1000)))
+      final_data%>%
+        filter(final_data$dist <= as.numeric(max(as.integer(c(input$n_1,input$n_2,input$n_3,input$n_4,input$n_5,input$n_6))*1000)))
     })
     
     #Define new dataset for reactive function anzahl because otherwise, the app crashes
     #This is used to find all Cities of Interest that have a certain amount of affected vehicles
     #It needs to be reactive so when the user changes to critical number, the number of highlighted cities also changes
-    cities_amount <- test%>%
+    cities_amount <- final_data%>%
       distinct(Ort, .keep_all=TRUE)
     
     anzahl <- reactive({
@@ -213,7 +215,7 @@ server <- function(input, output, session) {
                                n)
                    )
         #Add map controls for different groups/Layers 
-        my_map <- addLayersControl(map=my_map, overlayGroups = c("Clustered Markers","Cities of Interest"),options = layersControlOptions(collapsed = FALSE))%>% hideGroup("Cities of Interest")
+        my_map <- addLayersControl(map=my_map, overlayGroups = c("Clustered Markers","Cities of Interest"),options = layersControlOptions(collapsed = FALSE))#%>% hideGroup("Cities of Interest")
     })
     
     #Save selected Layers 
@@ -435,7 +437,7 @@ server <- function(input, output, session) {
     #Basic Datatable to prove visualisations
     output$basic_dataset <- renderDataTable({
       datatable(rownames = FALSE,
-                test %>%
+                final_data %>%
                   mutate(dist_zu_ham = dist/1000)%>% #Distance to Hamburg is converted from meters to kilometers
                   select(Ort, Bundesland, Laengengrad, Breitengrad, ID_Motor,Produktionsdatum, ID_Fahrzeug, Zulassung, dist_zu_ham, n)%>% #only necessary attributes are selected and thereby rearranged
                   arrange(Ort)%>% #rows are arranged by Ort name
