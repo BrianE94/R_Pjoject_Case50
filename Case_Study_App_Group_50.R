@@ -126,11 +126,6 @@ server <- function(input, output, session) {
         imgur1 <- "https://www.qw.tu-berlin.de/fileadmin/_processed_/8/8d/csm_QW_ohne_Text_print_a4670877cd.jpg"
         tags$img(src = imgur1, width=80, height=65)    
     })
-    
-    
-    #catch default values 
-    #https://stackoverflow.com/questions/33662033/shiny-how-to-make-reactive-value-initialize-with-default-value#38565508
-    defaults <- isolate(as.integer(c(input$n_1,input$n_2,input$n_3,input$n_4,input$n_5,input$n_6)))
 
     # Make a reactive Radius
     distanz <- reactive({
@@ -256,7 +251,6 @@ server <- function(input, output, session) {
         updateSliderInput(session,"n_2_6", value= input$n_2)
         # All radii that are not needed are set to 0
         updateSliderInput(session,"n_1", value= val1)
-        #updateSliderInput(session,"n_2", value= defaults[2])
         updateSliderInput(session,"n_3", value= 0)
         updateSliderInput(session,"n_4", value= 0)
         updateSliderInput(session,"n_5", value= 0)
@@ -281,7 +275,6 @@ server <- function(input, output, session) {
         
         updateSliderInput(session,"n_1", value= val1)
         updateSliderInput(session,"n_2", value= val2)
-        #updateSliderInput(session,"n_3", value= defaults[3])
         updateSliderInput(session,"n_4", value= 0)
         updateSliderInput(session,"n_5", value= 0)
         updateSliderInput(session,"n_6", value= 0)
@@ -307,7 +300,6 @@ server <- function(input, output, session) {
         updateSliderInput(session,"n_1", value= val1)
         updateSliderInput(session,"n_2", value= val2)
         updateSliderInput(session,"n_3", value= val3)
-        #updateSliderInput(session,"n_4", value= defaults[4])
         updateSliderInput(session,"n_5", value= 0)
         updateSliderInput(session,"n_6", value= 0)
       }
@@ -332,7 +324,6 @@ server <- function(input, output, session) {
         updateSliderInput(session,"n_2", value= val2)
         updateSliderInput(session,"n_3", value= val3)
         updateSliderInput(session,"n_4", value= val4)
-        #updateSliderInput(session,"n_5", value= defaults[5])
         updateSliderInput(session,"n_6", value= 0)
       }
       if(input$number==6){
@@ -346,7 +337,6 @@ server <- function(input, output, session) {
         updateSliderInput(session,"n_3", value= val3)
         updateSliderInput(session,"n_4", value= val4)
         updateSliderInput(session,"n_5", value= val5)
-        #updateSliderInput(session,"n_6", value= defaults[6])
       }
     })
     
