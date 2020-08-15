@@ -1,7 +1,7 @@
 ---
 title: "Case_Study_Group_50"
 author: "Long Dinh, Andre Düding, Brian Eiffert, Jonas Rieger, Vanessa Schweitzer"
-date: "SoSe 2020, 14/08/2020"
+date: "SoSe 2020, 15/08/2020"
 output: 
   html_document:
     theme: paper
@@ -32,7 +32,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Data Import
 
-## Choice of relevant data
+**Choice of relevant data**
 
 The required data is divided up into vehicle data, where the diesel engine data and production period is located, and geographical data consisting of the location of the cities and where the vehicles are registered. The following table gives an overview.
 
@@ -47,13 +47,13 @@ The task is to find all relevant type 11 and type 12 vehicles with an engine "K1
 The data tables "Bestandteile_Fahrzeuge_OEM1_Typ11", "Bestandteile_Fahrzeuge_OEM1_Typ12" contain the relevant "ID_Motor", which is needed to match the affected engines. The data table "Komponente_K1DI1" shows the production date of the engine which is needed to find the engines that were produced during the specified period.
 ```{r import vehicles, warning = FALSE, message= FALSE}
 # Import Bestabdteile OEM Typ 11/12
-data_bestandteile_oem1_typ11 <- read_csv2("./Data/Fahrzeug/Bestandteile_Fahrzeuge_OEM1_Typ11.csv", col_types = cols(X1=col_integer(),ID_Karosserie=col_character(),ID_Schaltung=col_character(),ID_Sitze=col_character(),ID_Motor=col_character(),ID_Fahrzeug=col_character())) # Import data
+data_bestandteile_oem1_typ11 <- read_csv2("Data/Fahrzeug/Bestandteile_Fahrzeuge_OEM1_Typ11.csv", col_types = cols(X1=col_integer(),ID_Karosserie=col_character(),ID_Schaltung=col_character(),ID_Sitze=col_character(),ID_Motor=col_character(),ID_Fahrzeug=col_character())) # Import data
 
-data_bestandteile_oem1_typ12 <- read_csv2("./Data/Fahrzeug/Bestandteile_Fahrzeuge_OEM1_Typ12.csv", col_types = cols(X1=col_integer(),ID_Karosserie=col_character(),ID_Schaltung=col_character(),ID_Sitze=col_character(),ID_Motor=col_character(),ID_Fahrzeug=col_character())) # Import data
+data_bestandteile_oem1_typ12 <- read_csv2("Data/Fahrzeug/Bestandteile_Fahrzeuge_OEM1_Typ12.csv", col_types = cols(X1=col_integer(),ID_Karosserie=col_character(),ID_Schaltung=col_character(),ID_Sitze=col_character(),ID_Motor=col_character(),ID_Fahrzeug=col_character())) # Import data
 
 
 # Import Komponente K1DI1
-data_komponente_k1di1 <- read_csv("./Data/Komponente/Komponente_K1DI1.csv",
+data_komponente_k1di1 <- read_csv("Data/Komponente/Komponente_K1DI1.csv",
 col_types = cols(ID_Motor.y=col_character(), Produktionsdatum.y=col_date(format = ""), Herstellernummer.y=col_integer(), Werksnummer.y=col_integer(), Fehlerhaft_Datum.y=col_date(format = ""), Fehlerhaft_Fahrleistung.y=col_integer(), ID_Motor=col_character(), Produktionsdatum=col_date(format = ""), Herstellernummer=col_integer(), Werksnummer=col_integer(),Fehlerhaft_Datum=col_date(format = ""), Fehlerhaft_Fahrleistung=col_integer()))
 ```
 
@@ -64,13 +64,13 @@ Besides, it is necessary to find the location of the vehicles in Germany. Additi
 
 ```{r import location, warning = FALSE, message=FALSE}
 # Import Location and Zulassung
-data_bundesland_plz_ort <- read_excel("./Data/Zulassungen/OpenGeoDB_bundesland_plz_ort_de (1).xls", col_names = c("Bundesland","PLZ","Ort"))
+data_bundesland_plz_ort <- read_excel("Data/Zulassungen/OpenGeoDB_bundesland_plz_ort_de (1).xls", col_names = c("Bundesland","PLZ","Ort"))
 
 # Import data set Zulassung
-data_Zulassung <- read_csv2("./Data/Zulassungen/Zulassungen_alle_Fahrzeuge.csv")
+data_Zulassung <- read_csv2("Data/Zulassungen/Zulassungen_alle_Fahrzeuge.csv")
 
 # Import data set Geodaten Gemeinde
-data_Geodaten_Gemeinden <- read_csv2("./Data/Geodaten/Geodaten_Gemeinden_v1.2_2017-08-22_TrR.csv",col_types =                                    cols(Postleitzahl=col_character(),Laengengrad=col_double(),Breitengrad=col_double()))
+data_Geodaten_Gemeinden <- read_csv2("Data/Geodaten/Geodaten_Gemeinden_v1.2_2017-08-22_TrR.csv",col_types =                                    cols(Postleitzahl=col_character(),Laengengrad=col_double(),Breitengrad=col_double()))
 ```
 # Data Preparation
 ## Tidy
@@ -125,7 +125,7 @@ data_Zulassung$X1 <- NULL # Remove unnecessary column
 #Geodaten Gemeiden
 
 data_Geodaten_Gemeinden<-data_Geodaten_Gemeinden%>%
-  rename(Ort=Gemeinde,PLZ= Postleitzahl)%>%# Rename column for consistenc
+  rename(Ort=Gemeinde,PLZ= Postleitzahl)%>%# Rename column for consistency
   add_row(PLZ="87637",Ort="Seeg",Laengengrad=10.6104157,Breitengrad=47.6542215)# Add informtion of place "Seeg"
   
 data_Geodaten_Gemeinden$PLZ <- str_pad(data_Geodaten_Gemeinden$PLZ,5,pad = "0") # Add missing Zeros to PLZ length under 5, for more info see https://stackoverflow.com/questions/5812493/how-to-add-leading-zeros
@@ -255,7 +255,7 @@ final_data_Group_50 <- left_join(final_data_Group_50,number_towns,by="Ort")%>% #
   distinct(ID_Fahrzeug, .keep_all=TRUE)# distinct the duplicated rows
 
 # Save final data set
-save(final_data_Group_50, file="final_data_Group_50.Rda")
+save(final_data_Group_50, file="Final_Data_Group_50.Rda")
 
 #Graphical illustration
 graph_final_data_Group_50 <- final_data_Group_50%>%
@@ -373,7 +373,7 @@ The **basic dataset** proves all visualizations. The attributes displayed are al
 
 The **final data set contains more than 500000 affected vehicles**. Thus, the **processing effort** for the computer is **enormously high**, which is why the app sometimes crashes, especially when multiple radii are selected. Hence, a powerful computer is needed to run and use the app without problems.
 
-In the App-code in the lines 24-25, the data set used by the App is defined. If the App crashes when all data is used, the pipe operator and the head function can be uncommented (and thereby enabled) to work with a smaller data set. The head function can also be replaced by the tail function to look at the data at the bottom of the data set.
+In the App-code in line 24, the data set used by the App is defined. If the App crashes when all data is used, the pipe operator and the head function can be uncommented (and thereby enabled) to work with a smaller data set. The head function can also be replaced by the tail function to look at the data at the bottom of the data set.
 
 # Results
 

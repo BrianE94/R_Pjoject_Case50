@@ -17,12 +17,12 @@ library(install.load)
 install_load("shiny", "leaflet", "htmltools", "highcharter", "ggplot2", "maps", "dplyr", "tidyverse", "rvest", "raster", "sf", "rgeos", "plotly", "jpeg", "png", "RColorBrewer", "DT", "janitor", "shinythemes", "shinyWidgets")
 
 #load saved dataframe from Case_Study_Group_50.Rmd
-load(file="final_data_Group_50.Rda")
+load(file="Final_Data_Group_50.Rda")
 
 #assign loaded dataset to new dataset called 'final_data' used throughout the whole app
 #in case the app crashes due to high processing efforts, disable comments and use only part of the dataset
-final_data <- final_data_Group_50%>%
-  head(100000)
+final_data <- Final_Data_Group_50#%>%
+  #head(100000)
   #tail(100000)
 
 # Define UI for application 
@@ -215,7 +215,7 @@ server <- function(input, output, session) {
                                n)
                    )
         #Add map controls for different groups/Layers 
-        my_map <- addLayersControl(map=my_map, overlayGroups = c("Clustered Markers","Cities of Interest"),options = layersControlOptions(collapsed = FALSE))#%>% hideGroup("Cities of Interest")
+        my_map <- addLayersControl(map=my_map, overlayGroups = c("Clustered Markers","Cities of Interest"),options = layersControlOptions(collapsed = FALSE))
     })
     
     #Save selected Layers 
