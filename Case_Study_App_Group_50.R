@@ -7,8 +7,6 @@
 #    http://shiny.rstudio.com/
 #
 
-library(shiny)
-
 if(!require("install.load")){
     install.packages("install.load")
 }
@@ -17,11 +15,11 @@ library(install.load)
 install_load("shiny", "leaflet", "htmltools", "highcharter", "ggplot2", "maps", "dplyr", "tidyverse", "rvest", "raster", "sf", "rgeos", "plotly", "jpeg", "png", "RColorBrewer", "DT", "janitor", "shinythemes", "shinyWidgets")
 
 #load saved dataframe from Case_Study_Group_50.Rmd
-load(file="Final_Data_Group_50.Rda")
+load(file="final_data_Group_50.Rda")
 
 #assign loaded dataset to new dataset called 'final_data' used throughout the whole app
 #in case the app crashes due to high processing efforts, disable comments and use only part of the dataset
-final_data <- Final_Data_Group_50#%>%
+final_data <- final_data_Group_50#%>%
   #head(100000)
   #tail(100000)
 

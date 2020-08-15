@@ -255,7 +255,7 @@ final_data_Group_50 <- left_join(final_data_Group_50,number_towns,by="Ort")%>% #
   distinct(ID_Fahrzeug, .keep_all=TRUE)# distinct the duplicated rows
 
 # Save final data set
-save(final_data_Group_50, file="Final_Data_Group_50.Rda")
+save(final_data_Group_50, file="final_data_Group_50.Rda")
 
 #Graphical illustration
 graph_final_data_Group_50 <- final_data_Group_50%>%
